@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Robo — Companion Face</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bezel: #14161f;
+    --bezel-edge: #1f2230;
+    --screen-a: #fff2df;
+    --screen-b: #ffd9ad;
+    --face: #2c2440;
+    --coral: #ff7b54;
+    --coral-dim: #d9673f;
+    --mint: #3fbfae;
+    --mint-dim: #2c8f82;
+    --ink: #2c2440;
+    --ink-soft: rgba(44,36,64,0.55);
+    --danger: #e8595c;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; margin:0; overflow:hidden; background:var(--bezel); font-family:'Fredoka',sans-serif;}
+  #app{position:fixed; inset:0; display:flex; flex-direction:column;}
+
+  /* ---------- Bezel / device frame ---------- */
+  .bezel{
+    flex:1; margin:10px; border-radius:34px; background:
+      radial-gradient(140% 100% at 50% -10%, #23273a 0%, var(--bezel) 60%);
+    box-shadow: inset 0 0 0 2px var(--bezel-edge), inset 0 0 40px rgba(0,0,0,0.5);
+    display:flex; flex-direction:column; position:relative; overflow:hidden;
+  }
+  .cam-notch{position:absolute; top:8px; left:50%; transform:translateX(-50%); width:70px; height:8px; border-radius:6px; background:#000; opacity:.5; z-index:5;}
+
+  /* ---------- Screen ---------- */
+  .screen{
+    flex:1; margin:18px; border-radius:26px; position:relative; overflow:hidden;
+    background: radial-gradient(120% 100% at 50% 15%, var(--screen-a) 0%, var(--screen-b) 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4), 0 10px 30px rgba(0,0,0,0.35);
+  }
+
+  /* ---------- Status bar ---------- */
+  .statusbar{
+    position:absolute; top:0; left:0; right:0; height:44px; display:flex; align-items:center;
+    justify-content:space-between; padding:0 16px; z-index:10; pointer-events:none;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink); font-weight:500; letter-spacing:.02em;
+  }
+  .status-group{display:flex; align-items:center; gap:8px;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--mint-dim);}
+  .dot.off{background:var(--danger);}
+  .pulse{animation:pulse 1.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  #emotionLabel{text-transform:uppercase; opacity:.8;}
+
+  /* ---------- Face canvas ---------- */
+  #faceWrap{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
+  canvas#face{display:block;}
+
+  /* ---------- Camera popup ---------- */
+  .cam-popup{
+    position:absolute; width:104px; height:78px; border-radius:14px; overflow:hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3), 0 0 0 3px rgba(255,255,255,0.55);
+    background:#000; z-index:20; transition: width .25s ease, height .25s ease, top .25s ease, right .25s ease;
+  }
+  .cam-popup video{width:100%; height:100%; object-fit:cover; transform:scaleX(-1);}
+  .cam-popup .cam-tag{
+    position:absolute; bottom:3px; left:6px; font-family:'JetBrains Mono',monospace; font-size:8px;
+    color:#fff; background:rgba(0,0,0,0.35); padding:1px 5px; border-radius:6px; letter-spacing:.03em;
+  }
+  .cam-popup .cam-dot{position:absolute; top:5px; right:6px; width:6px; height:6px; border-radius:50%; background:var(--coral); animation:pulse 1.4s ease-in-out infinite;}
+
+  /* portrait placement */
+  .portrait .cam-popup{ top:52px; right:14px; }
+  /* landscape placement (smaller, tucked corner) */
+  .landscape .cam-popup{ width:88px; height:64px; top:48px; left:14px; right:auto;}
+
+  /* ---------- Mic button ---------- */
+  #micBtn{
+    position:absolute; z-index:20; width:64px; height:64px; border-radius:50%; border:none;
+    background: linear-gradient(160deg, var(--coral), var(--coral-dim));
+    box-shadow: 0 6px 16px rgba(217,103,63,0.45), inset 0 1px 1px rgba(255,255,255,0.5);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  #micBtn svg{width:26px; height:26px;}
+  #micBtn.listening{animation:mic-glow 1s ease-in-out infinite;}
+  @keyframes mic-glow{0%,100%{box-shadow:0 6px 16px rgba(217,103,63,0.45), 0 0 0 0 rgba(255,123,84,0.5);}50%{box-shadow:0 6px 16px rgba(217,103,63,0.45), 0 0 0 14px rgba(255,123,84,0);}}
+  .portrait #micBtn{ bottom:22px; left:50%; transform:translateX(-50%); }
+  .landscape #micBtn{ bottom:18px; right:130px; }
+
+  /* ---------- D-pad (robot controls) ---------- */
+  .dpad{position:absolute; z-index:20; display:grid; grid-template-columns:repeat(3,40px); grid-template-rows:repeat(3,40px); gap:4px;}
+  .portrait .dpad{ display:none; }
+  .landscape .dpad{ bottom:16px; right:14px; }
+  .dpad button{
+    border:none; border-radius:10px; background:rgba(44,36,64,0.08); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .dpad button:active{ background:var(--mint); color:#fff; transform:scale(0.94); }
+  .dpad .up{grid-column:2; grid-row:1;}
+  .dpad .left{grid-column:1; grid-row:2;}
+  .dpad .stop{grid-column:2; grid-row:2; background:rgba(232,89,92,0.12); color:var(--danger);}
+  .dpad .right{grid-column:3; grid-row:2;}
+  .dpad .down{grid-column:2; grid-row:3;}
+
+  /* ---------- Emotion picker (debug / manual override) ---------- */
+  .emotion-row{position:absolute; z-index:20; display:flex; gap:6px;}
+  .portrait .emotion-row{ top:52px; left:16px; flex-direction:column; }
+  .landscape .emotion-row{ top:12px; left:50%; transform:translateX(-50%); }
+  .emotion-row button{
+    width:10px; height:10px; border-radius:50%; border:none; background:rgba(44,36,64,0.25); cursor:pointer; padding:0;
+  }
+  .emotion-row button.active{ background:var(--mint-dim); transform:scale(1.3); }
+
+  /* ---------- Connect button ---------- */
+  #connectBtn{
+    position:absolute; z-index:20; top:8px; right:14px; font-family:'JetBrains Mono',monospace; font-size:10px;
+    background:rgba(44,36,64,0.08); border:none; color:var(--ink); padding:5px 10px; border-radius:20px; cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .landscape #connectBtn{ top:8px; right:14px; }
+
+  /* ---------- Toast / speech bubble ---------- */
+  #speechBubble{
+    position:absolute; z-index:25; max-width:70%; background:#fff; color:var(--ink); padding:10px 14px;
+    border-radius:16px; font-size:13px; font-weight:500; box-shadow:0 8px 20px rgba(0,0,0,0.15);
+    opacity:0; transform:translateY(6px) scale(.98); transition:opacity .25s ease, transform .25s ease; pointer-events:none;
+  }
+  #speechBubble.show{opacity:1; transform:translateY(0) scale(1);}
+  .portrait #speechBubble{ bottom:100px; left:50%; transform:translateX(-50%) translateY(6px); }
+  .portrait #speechBubble.show{ transform:translateX(-50%) translateY(0); }
+  .landscape #speechBubble{ bottom:90px; right:16px; }
+
+  .listen-caption{
+    position:absolute; z-index:24; left:50%; bottom:18px; transform:translateX(-50%);
+    width:min(86%,520px); min-height:34px; padding:8px 14px;
+    border-radius:18px; background:rgba(44,36,64,0.82); color:#fff;
+    font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.35;
+    text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.18);
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    opacity:0; transition:opacity .18s ease, transform .18s ease;
+    pointer-events:none; overflow:hidden;
+  }
+  .listen-caption.show{opacity:1; transform:translateX(-50%) translateY(-2px);}
+  .listen-caption .prefix{opacity:.65; margin-right:5px;}
+  .landscape .listen-caption{left:16px; right:16px; bottom:14px; width:auto; transform:none;}
+  .landscape .listen-caption.show{transform:translateY(-2px);}
+  .hint{position:absolute; z-index:30; inset:auto 0 0 0; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(255,255,255,0.3); padding-bottom:2px; pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="app" class="portrait">
+  <div class="bezel">
+    <div class="cam-notch"></div>
+    <div class="screen">
+      <div class="statusbar">
+        <div class="status-group">
+          <span class="dot off" id="mediaDot"></span>
+          <span id="mediaLabel">MEDIA</span>
+        </div>
+        <div class="status-group"><span class="dot" id="connDot"></span><span id="connLabel">OFFLINE</span></div>
+        <div id="emotionLabel">curious</div>
+        <div class="status-group"><span id="battLabel">82%</span></div>
+      </div>
+
+      <div id="faceWrap"><canvas id="face" width="600" height="600"></canvas></div>
+
+      <div class="cam-popup" id="camPopup">
+        <video id="camVideo" autoplay playsinline muted></video>
+        <div class="cam-dot"></div>
+        <div class="cam-tag">what I see</div>
+      </div>
+
+      <div class="emotion-row" id="emotionRow"></div>
+
+      <div id="speechBubble"></div>
+
+      <button id="connectBtn">connect robot</button>
+
+      <div class="dpad">
+        <button class="up" data-cmd="F">▲</button>
+        <button class="left" data-cmd="L">◀</button>
+        <button class="stop" data-cmd="S">■</button>
+        <button class="right" data-cmd="R">▶</button>
+        <button class="down" data-cmd="B">▼</button>
+      </div>
+
+      <button id="micBtn" aria-label="talk to Robo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff5ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="listen-caption" id="listenCaption" aria-live="polite">
+      <span class="prefix">ROBO HEARS:</span><span id="listenText">Tap the mic and speak…</span>
+    </div>
+  </div>
+  <div class="hint" id="hint">rotate your phone — robo adapts • tap the dots to set a mood manually</div>
+</div>
+
+<script>
+/* =========================================================
+   ROBO — companion face
+   - Canvas face renderer w/ emotion states, blink, idle motion
+   - Orientation-aware layout (portrait / landscape)
+   - Camera popup ("what the AI sees")
+   - Placeholder voice loop: Web Speech STT -> tiny rule-based
+     brain -> Web Speech TTS (swap runBrain() for a real API later)
+   - ESP32 control scaffold via Web Bluetooth (BLE)
+   ========================================================= */
+
+/* ---------------- Emotion engine ---------------- */
+const EMOTIONS = ["neutral","happy","curious","sleepy","startled","confused","listening","thinking"];
+let currentEmotion = "curious";
+let targetEmotion = "curious";
+let blend = 1; // 0..1 interpolation between previous and target
+let lastInteraction = Date.now();
+
+const emotionRow = document.getElementById('emotionRow');
+EMOTIONS.filter(e=>!["listening","thinking"].includes(e)).forEach(e=>{
+  const b = document.createElement('button');
+  b.title = e;
+  b.addEventListener('click', ()=> setEmotion(e, true));
+  emotionRow.appendChild(b);
+});
+function refreshEmotionDots(){
+  [...emotionRow.children].forEach((el,i)=>{
+    const e = EMOTIONS.filter(x=>!["listening","thinking"].includes(x))[i];
+    el.classList.toggle('active', e === currentEmotion);
+  });
+}
+function setEmotion(e, manual){
+  if(e === targetEmotion) return;
+  targetEmotion = e; blend = 0;
+  document.getElementById('emotionLabel').textContent = e;
+  if(manual) lastInteraction = Date.now();
+}
+
+/* idle behaviour: Robo gets curious / sleepy on its own so it feels alive */
+setInterval(()=>{
+  const idle = Date.now() - lastInteraction;
+  if(idle > 25000 && Math.random() < 0.5) setEmotion("sleepy");
+  else if(idle > 9000 && Math.random() < 0.35) setEmotion(Math.random()<0.5 ? "curious" : "neutral");
+}, 4000);
+
+/* ---------------- Canvas face renderer ---------------- */
+const canvas = document.getElementById('face');
+const ctx = canvas.getContext('2d');
+let dpr = Math.min(window.devicePixelRatio||1, 2);
+
+function sizeCanvas(){
+  const wrap = document.getElementById('faceWrap');
+  const s = Math.min(wrap.clientWidth, wrap.clientHeight) * 0.82;
+  canvas.style.width = s+'px'; canvas.style.height = s+'px';
+  canvas.width = s*dpr; canvas.height = s*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener('resize', sizeCanvas);
+
+let t = 0;
+let blinkTimer = randRange(2200, 5200);
+let blinkProgress = 0; // 0 open .. 1 closed
+let eyeTarget = {x:0,y:0};
+let eyePos = {x:0,y:0};
+let nextSaccade = randRange(1500,3500);
+
+function randRange(a,b){ return a + Math.random()*(b-a); }
+
+function scheduleSaccade(){
+  nextSaccade = randRange(1400, 3800);
+  eyeTarget = { x: randRange(-1,1), y: randRange(-0.6,0.6) };
+}
+
+function draw(dt){
+  const s = canvas.width/dpr;
+  ctx.clearRect(0,0,s,s);
+  const cx = s/2, cy = s/2;
+  const ink = getComputedStyle(document.documentElement).getPropertyValue('--face').trim();
+
+  // breathing scale
+  const breathe = 1 + Math.sin(t*1.2)*0.012;
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.scale(breathe, breathe);
+  ctx.translate(-cx,-cy);
+
+  // blink
+  blinkTimer -= dt;
+  if(blinkTimer <= 0){ blinkProgress = 0.0001; blinkTimer = randRange(2200,5200); }
+  if(blinkProgress>0){
+    blinkProgress += dt/90;
+    if(blinkProgress>=1.9) blinkProgress = 0;
+  }
+  const blinkAmt = blinkProgress>0 ? Math.sin(Math.min(blinkProgress,1)*Math.PI) : 0;
+
+  // saccades
+  nextSaccade -= dt;
+  if(nextSaccade<=0) scheduleSaccade();
+  eyePos.x += (eyeTarget.x - eyePos.x)*0.06;
+  eyePos.y += (eyeTarget.y - eyePos.y)*0.06;
+
+  // emotion blend
+  blend = Math.min(1, blend + dt/260);
+  if(blend>=1) currentEmotion = targetEmotion;
+  refreshEmotionDots();
+  const from = shapeFor(currentEmotion, t);
+  const to = shapeFor(targetEmotion, t);
+  const k = easeInOut(blend);
+  const eyeH = lerp(from.eyeH,to.eyeH,k) * (1-blinkAmt*0.94);
+  const eyeW = lerp(from.eyeW,to.eyeW,k);
+  const browAngle = lerp(from.brow,to.brow,k);
+  const browY = lerp(from.browY,to.browY,k);
+  const mouth = lerpMouth(from.mouth,to.mouth,k);
+  const eyeOffsetX = eyePos.x * s*0.02 * lerp(from.wander,to.wander,k);
+  const eyeOffsetY = eyePos.y * s*0.015 * lerp(from.wander,to.wander,k);
+  const tilt = lerp(from.tilt,to.tilt,k);
+
+  ctx.rotate(tilt);
+
+  const eyeGap = s*0.19;
+  const eyeY = cy - s*0.03;
+  const eyeR = s*0.085;
+
+  // eyes
+  [-1,1].forEach(side=>{
+    const ex = cx + side*eyeGap + eyeOffsetX;
+    const ey = eyeY + eyeOffsetY;
+    ctx.save();
+    ctx.translate(ex,ey);
+    ctx.fillStyle = ink;
+    ctx.beginPath();
+    ctx.ellipse(0,0, eyeR*eyeW, Math.max(eyeR*eyeH,eyeR*0.04), 0,0,Math.PI*2);
+    ctx.fill();
+    // highlight
+    if(eyeH>0.25){
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.beginPath();
+      ctx.ellipse(-eyeR*0.22, -eyeR*0.28*eyeH, eyeR*0.16,eyeR*0.16*eyeH,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // brow
+    ctx.save();
+    ctx.strokeStyle = ink; ctx.lineWidth = s*0.018; ctx.lineCap='round';
+    ctx.translate(ex, ey - eyeR*1.55 + browY*s*0.05);
+    ctx.rotate(side*browAngle);
+    ctx.beginPath();
+    ctx.moveTo(-eyeR*0.55,0); ctx.lineTo(eyeR*0.55,0);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // mouth
+  ctx.save();
+  ctx.translate(cx, cy + s*0.19);
+  ctx.strokeStyle = ink; ctx.lineWidth = s*0.024; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-s*mouth.w/2, 0);
+  ctx.quadraticCurveTo(0, mouth.curve*s, s*mouth.w/2, 0);
+  ctx.stroke();
+  if(mouth.open>0){
+    ctx.fillStyle = ink; ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.ellipse(0, s*mouth.curve*0.35, s*mouth.w*0.22, s*mouth.open, 0,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // cheeks for happy
+  const cheek = lerp(from.cheek||0, to.cheek||0, k);
+  if(cheek>0.02){
+    ctx.fillStyle = 'rgba(255,123,84,'+ (cheek*0.5) +')';
+    [-1,1].forEach(side=>{
+      ctx.beginPath();
+      ctx.ellipse(cx+side*s*0.29, cy+s*0.07, s*0.045, s*0.03,0,0,Math.PI*2);
+      ctx.fill();
+    });
+  }
+
+  ctx.restore();
+}
+
+function lerp(a,b,k){ return a+(b-a)*k; }
+function lerpMouth(a,b,k){ return {w:lerp(a.w,b.w,k), curve:lerp(a.curve,b.curve,k), open:lerp(a.open,b.open,k)}; }
+function easeInOut(x){ return x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2; }
+
+function shapeFor(e,t){
+  switch(e){
+    case "happy": return {eyeH:0.62,eyeW:1.05,brow:0.02,browY:-0.3,tilt:0,wander:0.4,cheek:1,
+      mouth:{w:0.46,curve:0.13,open:0}};
+    case "curious": return {eyeH:1.15,eyeW:0.92,brow:0.16,browY:-0.7,tilt:0.045,wander:1,cheek:0,
+      mouth:{w:0.24,curve:0.04,open:0.02}};
+    case "sleepy": return {eyeH:0.18,eyeW:1,brow:-0.02,browY:0.1,tilt:0,wander:0.15,cheek:0,
+      mouth:{w:0.28,curve:0.02,open:0}};
+    case "startled": return {eyeH:1.5,eyeW:1.2,brow:0,browY:-1,tilt:0,wander:0.6,cheek:0,
+      mouth:{w:0.2,curve:-0.02,open:0.06}};
+    case "confused": return {eyeH:0.95,eyeW:0.85,brow:0.22,browY:-0.4,tilt:0.09,wander:0.6,cheek:0,
+      mouth:{w:0.3,curve:-0.06,open:0}};
+    case "listening": return {eyeH:1.05,eyeW:1,brow:0.05,browY:-0.4,tilt:0,wander:0.2,cheek:0.3,
+      mouth:{w:0.22,curve:0.02,open:0.015}};
+    case "thinking": return {eyeH:0.55,eyeW:0.9,brow:0.1,browY:-0.2,tilt:0.06,wander:0.1,cheek:0,
+      mouth:{w:0.2,curve:-0.03,open:0}};
+    default: return {eyeH:0.85,eyeW:1,brow:0,browY:-0.2,tilt:0,wander:0.6,cheek:0.1,
+      mouth:{w:0.3,curve:0.06,open:0}};
+  }
+}
+
+let lastFrame = performance.now();
+function loop(now){
+  const dt = now - lastFrame; lastFrame = now; t += dt/1000;
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+
+/* ---------------- Orientation handling ---------------- */
+const app = document.getElementById('app');
+function applyOrientation(){
+  const portrait = window.matchMedia("(orientation: portrait)").matches;
+  app.classList.toggle('portrait', portrait);
+  app.classList.toggle('landscape', !portrait);
+  sizeCanvas();
+}
+window.matchMedia("(orientation: portrait)").addEventListener('change', applyOrientation);
+window.addEventListener('resize', applyOrientation);
+
+/* ---------------- Camera popup ("what I see") ---------------- */
+let cameraStream = null;
+let micStream = null;
+
+function showMediaError(type, err){
+  const popup = document.getElementById('camPopup');
+  const msg = type === 'camera'
+    ? 'camera unavailable — use HTTPS and allow camera access'
+    : 'microphone unavailable — allow microphone access';
+  console.warn(type + ' error:', err);
+  if(type === 'camera'){
+    popup.innerHTML = '<div style="color:#fff;font-family:JetBrains Mono,monospace;font-size:9px;padding:8px;">'+msg+'</div>';
+  }
+}
+
+async function startCamera(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showMediaError('camera', new Error('getUserMedia unavailable'));
+    return false;
+  }
+
+  try{
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video:{
+        facingMode:{ideal:'user'},
+        width:{ideal:1280},
+        height:{ideal:720},
+        frameRate:{ideal:30,max:30}
+      },
+      audio:false
+    });
+
+    const video = document.getElementById('camVideo');
+    video.srcObject = cameraStream;
+    await video.play().catch(()=>{});
+    return true;
+  }catch(err){
+    showMediaError('camera', err);
+    return false;
+  }
+}
+
+async function startMicrophone(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showMediaError('microphone', new Error('getUserMedia unavailable'));
+    return false;
+  }
+
+  try{
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio:{
+        echoCancellation:true,
+        noiseSuppression:true,
+        autoGainControl:true,
+        channelCount:1
+      },
+      video:false
+    });
+    console.log('Microphone stream ready:', micStream);
+    return true;
+  }catch(err){
+    showMediaError('microphone', err);
+    return false;
+  }
+}
+
+async function requestMediaAccess(){
+  // Request camera first, then microphone so Android shows clear permissions.
+  const cameraOK = await startCamera();
+  const micOK = await startMicrophone();
+
+  setMediaState(cameraOK, micOK);
+
+  if(cameraOK || micOK){
+    say(cameraOK && micOK
+      ? 'Camera and microphone are ready.'
+      : cameraOK
+        ? 'Camera is ready. Microphone permission is still needed.'
+        : 'Microphone is ready. Camera permission is still needed.');
+  }
+}
+
+/* ---------------- Live listening captions ---------------- */
+const listenCaption = document.getElementById('listenCaption');
+const listenText = document.getElementById('listenText');
+let captionTimer = null;
+
+function setListenCaption(text, visible=true){
+  listenText.textContent = text || 'Listening…';
+  listenCaption.classList.toggle('show', visible);
+}
+
+function hideListenCaption(delay=1200){
+  clearTimeout(captionTimer);
+  captionTimer = setTimeout(()=>listenCaption.classList.remove('show'), delay);
+}
+
+/* ---------------- Speech bubble ---------------- */
+const bubble = document.getElementById('speechBubble');
+let bubbleTimeout;
+function say(text){
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  clearTimeout(bubbleTimeout);
+  bubbleTimeout = setTimeout(()=> bubble.classList.remove('show'), 3400);
+  if('speechSynthesis' in window){
+    const u = new SpeechSynthesisUtterance(text);
+    u.pitch = 1.3; u.rate = 1.02;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }
+}
+
+/* ---------------- Placeholder "brain" ----------------
+   Swap this function's body for a real API call later —
+   send `text` to your LLM of choice and return its reply. */
+function runBrain(text){
+  const lower = text.toLowerCase();
+  if(/hi|hello|hey/.test(lower)){ setEmotion('happy'); return "Hey! Good to see you."; }
+  if(/how are you/.test(lower)){ setEmotion('happy'); return "Running at 82% battery and feeling curious!"; }
+  if(/\?/.test(lower)){ setEmotion('curious'); return "Hmm, good question — I'm still a simple brain for now, but I'm listening."; }
+  if(/sleep|tired|night/.test(lower)){ setEmotion('sleepy'); return "Getting a little sleepy myself..."; }
+  if(/forward|left|right|back|stop|move/.test(lower)){ setEmotion('neutral'); return "Got it — driving now."; }
+  setEmotion('confused'); return "I didn't quite catch that — I'm a simple brain for now.";
+}
+
+/* ---------------- Voice loop (Web Speech API) ---------------- */
+const micBtn = document.getElementById('micBtn');
+let recognition = null;
+let listening = false;
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(SR){
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  recognition.onstart = ()=>{
+    listening = true;
+    micBtn.classList.add('listening');
+    setEmotion('listening');
+    lastInteraction = Date.now();
+    clearTimeout(captionTimer);
+    setListenCaption('Listening…', true);
+  };
+
+  recognition.onend = ()=>{
+    listening = false;
+    micBtn.classList.remove('listening');
+    hideListenCaption(1800);
+  };
+
+  recognition.onresult = (e)=>{
+    let transcript = '';
+    for(let i=0; i<e.results.length; i++){
+      transcript += e.results[i][0].transcript + ' ';
+    }
+    transcript = transcript.trim();
+
+    if(transcript){
+      setListenCaption(transcript, true);
+      lastInteraction = Date.now();
+    }
+
+    let finalText = '';
+    for(let i=e.resultIndex; i<e.results.length; i++){
+      if(e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+    }
+    finalText = finalText.trim();
+
+    if(finalText){
+      setListenCaption(finalText, true);
+      setEmotion('thinking');
+      setTimeout(()=>{ const reply = runBrain(finalText); say(reply); }, 500);
+    }
+  };
+  recognition.onerror = ()=>{ listening = false; micBtn.classList.remove('listening'); setEmotion('confused'); };
+}
+micBtn.addEventListener('click', async ()=>{
+  lastInteraction = Date.now();
+
+  if(!recognition){
+    // Still request raw microphone permission so the app can use a real
+    // audio stream later with Whisper/WebRTC/etc.
+    await startMicrophone();
+    say("Voice input isn't supported in this browser — try Chrome on Android.");
+    return;
+  }
+
+  // Explicitly obtain microphone permission before starting recognition.
+  if(!micStream){
+    const ok = await startMicrophone();
+    if(!ok){
+      setEmotion('confused');
+      say("I need microphone permission to hear you.");
+      return;
+    }
+    const cameraOK = !!cameraStream;
+    setMediaState(cameraOK, true);
+  }
+
+  if(listening){
+    recognition.stop();
+    return;
+  }
+
+  try{
+    recognition.start();
+  }catch(e){
+    console.warn('Speech recognition start:', e);
+  }
+});
+
+/* ---------------- ESP32 control via Web Bluetooth ----------------
+   Fill in SERVICE_UUID / CHAR_UUID to match your ESP32 GATT server.
+   The ESP32 should expose a writable characteristic that accepts
+   single-byte commands: 'F','B','L','R','S' (fwd/back/left/right/stop). */
+const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; // placeholder — match your firmware
+const CHAR_UUID    = '0000ffe1-0000-1000-8000-00805f9b34fb'; // placeholder — match your firmware
+let bleDevice = null, bleChar = null;
+
+document.getElementById('connectBtn').addEventListener('click', async ()=>{
+  if(!navigator.bluetooth){ say("Web Bluetooth isn't available — use Chrome on Android."); return; }
+  try{
+    bleDevice = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [SERVICE_UUID] }],
+      optionalServices: [SERVICE_UUID]
+    });
+    const server = await bleDevice.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    bleChar = await service.getCharacteristic(CHAR_UUID);
+    setConnState(true);
+    say("Connected to my body!");
+  }catch(err){
+    console.warn(err);
+    setConnState(false);
+  }
+});
+function setConnState(on){
+  document.getElementById('connDot').classList.toggle('off', !on);
+  document.getElementById('connLabel').textContent = on ? 'ONLINE' : 'OFFLINE';
+}
+async function sendCmd(cmd){
+  lastInteraction = Date.now();
+  if(bleChar){
+    try{ await bleChar.writeValue(new TextEncoder().encode(cmd)); }catch(e){ console.warn(e); }
+  }
+  if(cmd==='S') setEmotion('neutral'); else setEmotion('curious');
+}
+document.querySelectorAll('.dpad button').forEach(b=>{
+  b.addEventListener('click', ()=> sendCmd(b.dataset.cmd));
+});
+
+
+/* ---------------- Media diagnostics ---------------- */
+if(location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1'){
+  console.warn('Robo media access requires HTTPS (or localhost). Current protocol:', location.protocol);
+}
+
+/* ---------------- Boot ---------------- */
+applyOrientation();
+requestAnimationFrame(loop);
+
+/*
+  Camera + microphone permissions are requested from a user gesture.
+  This is more reliable on Android browsers than requesting media during
+  page load, and avoids silently failing when the browser blocks autoplay/
+  permission prompts.
+*/
+document.getElementById('camPopup').addEventListener('click', requestMediaAccess);
+document.getElementById('camVideo').addEventListener('click', requestMediaAccess);
+
+/* First tap anywhere on the face also offers media access if not ready. */
+let mediaRequested = false;
+document.getElementById('faceWrap').addEventListener('click', async ()=>{
+  if(mediaRequested) return;
+  mediaRequested = true;
+  await requestMediaAccess();
+});
+setTimeout(()=> document.getElementById('hint').style.opacity=0, 6000);
+</script>
+</body>
+</html>
