@@ -20,6 +20,8 @@
     --ink: #2c2440;
     --ink-soft: rgba(44,36,64,0.55);
     --danger: #e8595c;
+    --face-glow: rgba(255,123,84,0.16);
+    --face-highlight: rgba(255,255,255,0.75);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%; margin:0; overflow:hidden; background:var(--bezel); font-family:'Fredoka',sans-serif;}
@@ -66,7 +68,23 @@
 
   /* ---------- Face canvas ---------- */
   #faceWrap{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
-  canvas#face{display:block;}
+  .face-name{
+    position:absolute; top:12%; left:50%; transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.28em;
+    color:rgba(44,36,64,.30); font-weight:600; pointer-events:none;
+  }
+  canvas#face{
+    display:block;
+    filter: drop-shadow(0 18px 28px rgba(44,36,64,0.08));
+  }
+  #faceWrap::after{
+    content:"";
+    position:absolute; inset:18% 18%;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.10), transparent 58%);
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
 
   /* ---------- Camera popup ---------- */
   .cam-popup{
@@ -189,7 +207,10 @@
         </div>
       </div>
 
-      <div id="faceWrap"><canvas id="face" width="600" height="600"></canvas></div>
+      <div id="faceWrap">
+        <div class="face-name">ROBO</div>
+        <canvas id="face" width="600" height="600"></canvas>
+      </div>
 
       <div class="cam-popup" id="camPopup">
         <video id="camVideo" autoplay playsinline muted></video>
@@ -268,9 +289,12 @@ function setEmotion(e, manual){
 /* idle behaviour: Robo gets curious / sleepy on its own so it feels alive */
 setInterval(()=>{
   const idle = Date.now() - lastInteraction;
-  if(idle > 25000 && Math.random() < 0.5) setEmotion("sleepy");
-  else if(idle > 9000 && Math.random() < 0.35) setEmotion(Math.random()<0.5 ? "curious" : "neutral");
-}, 4000);
+  if(idle > 30000 && Math.random() < 0.38) setEmotion("sleepy");
+  else if(idle > 12000 && Math.random() < 0.30){
+    const choices = ["curious","neutral","happy"];
+    setEmotion(choices[Math.floor(Math.random()*choices.length)]);
+  }
+}, 4200);
 
 /* ---------------- Canvas face renderer ---------------- */
 const canvas = document.getElementById('face');
@@ -279,7 +303,7 @@ let dpr = Math.min(window.devicePixelRatio||1, 2);
 
 function sizeCanvas(){
   const wrap = document.getElementById('faceWrap');
-  const s = Math.min(wrap.clientWidth, wrap.clientHeight) * 0.82;
+  const s = Math.min(wrap.clientWidth, wrap.clientHeight) * 0.88;
   canvas.style.width = s+'px'; canvas.style.height = s+'px';
   canvas.width = s*dpr; canvas.height = s*dpr;
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -303,135 +327,376 @@ function scheduleSaccade(){
 function draw(dt){
   const s = canvas.width/dpr;
   ctx.clearRect(0,0,s,s);
+
   const cx = s/2, cy = s/2;
   const ink = getComputedStyle(document.documentElement).getPropertyValue('--face').trim();
 
-  // breathing scale
-  const breathe = 1 + Math.sin(t*1.2)*0.012;
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.scale(breathe, breathe);
-  ctx.translate(-cx,-cy);
+  // Soft breathing makes Robo feel alive.
+  const breathe = 1 + Math.sin(t*1.25)*0.008;
+  const bob = Math.sin(t*0.9)*s*0.006;
 
-  // blink
+  // Blink.
   blinkTimer -= dt;
-  if(blinkTimer <= 0){ blinkProgress = 0.0001; blinkTimer = randRange(2200,5200); }
-  if(blinkProgress>0){
-    blinkProgress += dt/90;
-    if(blinkProgress>=1.9) blinkProgress = 0;
+  if(blinkTimer <= 0){
+    blinkProgress = 0.0001;
+    blinkTimer = randRange(2600, 6200);
   }
-  const blinkAmt = blinkProgress>0 ? Math.sin(Math.min(blinkProgress,1)*Math.PI) : 0;
+  if(blinkProgress > 0){
+    blinkProgress += dt/105;
+    if(blinkProgress >= 1.9) blinkProgress = 0;
+  }
+  const blinkAmt = blinkProgress > 0
+    ? Math.sin(Math.min(blinkProgress,1)*Math.PI)
+    : 0;
 
-  // saccades
+  // Eye saccades.
   nextSaccade -= dt;
-  if(nextSaccade<=0) scheduleSaccade();
-  eyePos.x += (eyeTarget.x - eyePos.x)*0.06;
-  eyePos.y += (eyeTarget.y - eyePos.y)*0.06;
+  if(nextSaccade <= 0) scheduleSaccade();
+  eyePos.x += (eyeTarget.x-eyePos.x)*0.075;
+  eyePos.y += (eyeTarget.y-eyePos.y)*0.075;
 
-  // emotion blend
-  blend = Math.min(1, blend + dt/260);
-  if(blend>=1) currentEmotion = targetEmotion;
+  // Emotion interpolation.
+  blend = Math.min(1, blend + dt/240);
+  if(blend >= 1) currentEmotion = targetEmotion;
   refreshEmotionDots();
-  const from = shapeFor(currentEmotion, t);
-  const to = shapeFor(targetEmotion, t);
+
+  const from = shapeFor(currentEmotion,t);
+  const to = shapeFor(targetEmotion,t);
   const k = easeInOut(blend);
-  const eyeH = lerp(from.eyeH,to.eyeH,k) * (1-blinkAmt*0.94);
+
+  const eyeH = lerp(from.eyeH,to.eyeH,k) * (1-blinkAmt*0.98);
   const eyeW = lerp(from.eyeW,to.eyeW,k);
   const browAngle = lerp(from.brow,to.brow,k);
   const browY = lerp(from.browY,to.browY,k);
   const mouth = lerpMouth(from.mouth,to.mouth,k);
-  const eyeOffsetX = eyePos.x * s*0.02 * lerp(from.wander,to.wander,k);
-  const eyeOffsetY = eyePos.y * s*0.015 * lerp(from.wander,to.wander,k);
+  const wander = lerp(from.wander,to.wander,k);
+  const cheek = lerp(from.cheek||0,to.cheek||0,k);
+  const glow = lerp(from.glow||0,to.glow||0,k);
   const tilt = lerp(from.tilt,to.tilt,k);
 
-  ctx.rotate(tilt);
+  const eyeOffsetX = eyePos.x*s*0.026*wander;
+  const eyeOffsetY = eyePos.y*s*0.018*wander;
 
-  const eyeGap = s*0.19;
-  const eyeY = cy - s*0.03;
-  const eyeR = s*0.085;
-
-  // eyes
-  [-1,1].forEach(side=>{
-    const ex = cx + side*eyeGap + eyeOffsetX;
-    const ey = eyeY + eyeOffsetY;
-    ctx.save();
-    ctx.translate(ex,ey);
-    ctx.fillStyle = ink;
-    ctx.beginPath();
-    ctx.ellipse(0,0, eyeR*eyeW, Math.max(eyeR*eyeH,eyeR*0.04), 0,0,Math.PI*2);
-    ctx.fill();
-    // highlight
-    if(eyeH>0.25){
-      ctx.fillStyle = 'rgba(255,255,255,0.75)';
-      ctx.beginPath();
-      ctx.ellipse(-eyeR*0.22, -eyeR*0.28*eyeH, eyeR*0.16,eyeR*0.16*eyeH,0,0,Math.PI*2);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // brow
-    ctx.save();
-    ctx.strokeStyle = ink; ctx.lineWidth = s*0.018; ctx.lineCap='round';
-    ctx.translate(ex, ey - eyeR*1.55 + browY*s*0.05);
-    ctx.rotate(side*browAngle);
-    ctx.beginPath();
-    ctx.moveTo(-eyeR*0.55,0); ctx.lineTo(eyeR*0.55,0);
-    ctx.stroke();
-    ctx.restore();
-  });
-
-  // mouth
   ctx.save();
-  ctx.translate(cx, cy + s*0.19);
-  ctx.strokeStyle = ink; ctx.lineWidth = s*0.024; ctx.lineCap='round';
-  ctx.beginPath();
-  ctx.moveTo(-s*mouth.w/2, 0);
-  ctx.quadraticCurveTo(0, mouth.curve*s, s*mouth.w/2, 0);
-  ctx.stroke();
-  if(mouth.open>0){
-    ctx.fillStyle = ink; ctx.globalAlpha = 0.9;
+  ctx.translate(cx,cy+bob);
+  ctx.scale(breathe,breathe);
+  ctx.rotate(tilt*0.55);
+  ctx.translate(-cx,-cy);
+
+  // Ambient glow around the character.
+  if(glow > 0.01){
+    const aura = ctx.createRadialGradient(cx,cy+s*.03,s*.08,cx,cy+s*.03,s*.43);
+    aura.addColorStop(0, `rgba(255,123,84,${glow*.10})`);
+    aura.addColorStop(.55, `rgba(255,180,120,${glow*.055})`);
+    aura.addColorStop(1, 'rgba(255,180,120,0)');
+    ctx.fillStyle = aura;
     ctx.beginPath();
-    ctx.ellipse(0, s*mouth.curve*0.35, s*mouth.w*0.22, s*mouth.open, 0,0,Math.PI*2);
+    ctx.arc(cx,cy+s*.03,s*.44,0,Math.PI*2);
     ctx.fill();
   }
+
+  // Floating sparkles / particles.
+  for(let i=0;i<5;i++){
+    const a = t*(0.18+i*0.025)+i*1.25;
+    const rx = s*(0.34+0.018*Math.sin(i));
+    const ry = s*(0.30+0.012*i);
+    const sx = cx + Math.cos(a)*rx;
+    const sy = cy + Math.sin(a*1.15)*ry;
+    const alpha = 0.14 + 0.10*(0.5+0.5*Math.sin(t*1.4+i));
+    ctx.fillStyle = `rgba(255,123,84,${alpha})`;
+    ctx.beginPath();
+    ctx.arc(sx,sy,s*(0.006+0.002*(i%2)),0,Math.PI*2);
+    ctx.fill();
+  }
+
+  // Cute antenna.
+  const antennaY = cy-s*.31;
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = s*.012;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx,cy-s*.245);
+  ctx.quadraticCurveTo(cx-s*.01,cy-s*.285,cx,antennaY);
+  ctx.stroke();
+
+  const pulse = 1 + Math.sin(t*2.8)*.10;
+  const orbR = s*.032*pulse;
+  const orbGlow = ctx.createRadialGradient(cx,antennaY,0,cx,antennaY,s*.075);
+  orbGlow.addColorStop(0,'rgba(255,123,84,.75)');
+  orbGlow.addColorStop(1,'rgba(255,123,84,0)');
+  ctx.fillStyle = orbGlow;
+  ctx.beginPath();
+  ctx.arc(cx,antennaY,s*.075,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = '#ff7b54';
+  ctx.beginPath();
+  ctx.arc(cx,antennaY,orbR,0,Math.PI*2);
+  ctx.fill();
+
+  // Rounded robot head / shell.
+  const headW = s*.67;
+  const headH = s*.53;
+  const headX = cx-headW/2;
+  const headY = cy-s*.22;
+
+  // Outer glow.
+  ctx.shadowColor = 'rgba(255,123,84,.22)';
+  ctx.shadowBlur = s*.035;
+  const shell = ctx.createLinearGradient(headX,headY,headX+headW,headY+headH);
+  shell.addColorStop(0,'#fff8ef');
+  shell.addColorStop(.52,'#ffe6cf');
+  shell.addColorStop(1,'#ffd2ad');
+
+  ctx.fillStyle = shell;
+  roundRect(ctx,headX,headY,headW,headH,s*.105);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Side ear/pad details.
+  ctx.fillStyle = '#f4c39d';
+  roundRect(ctx,headX-s*.038,cy-s*.075,s*.052,s*.15,s*.025); ctx.fill();
+  roundRect(ctx,headX+headW-s*.014,cy-s*.075,s*.052,s*.15,s*.025); ctx.fill();
+
+  // Inner face panel.
+  const panelX = headX+s*.045;
+  const panelY = headY+s*.045;
+  const panelW = headW-s*.09;
+  const panelH = headH-s*.09;
+
+  const panel = ctx.createLinearGradient(panelX,panelY,panelX,panelY+panelH);
+  panel.addColorStop(0,'#493b59');
+  panel.addColorStop(1,'#28213a');
+  ctx.fillStyle = panel;
+  roundRect(ctx,panelX,panelY,panelW,panelH,s*.075);
+  ctx.fill();
+
+  // Little top shine on the shell.
+  ctx.fillStyle = 'rgba(255,255,255,.34)';
+  roundRect(ctx,headX+s*.10,headY+s*.035,s*.20,s*.012,s*.006);
+  ctx.fill();
+
+  const eyeGap = s*.185;
+  const eyeY = cy-s*.045;
+  const eyeR = s*.087;
+
+  [-1,1].forEach(side=>{
+    const ex = cx+side*eyeGap+eyeOffsetX;
+    const ey = eyeY+eyeOffsetY;
+    const w = eyeR*eyeW;
+    const h = Math.max(eyeR*eyeH,eyeR*.035);
+
+    // Expressive brow.
+    ctx.save();
+    ctx.strokeStyle = '#fff6ee';
+    ctx.globalAlpha = .92;
+    ctx.lineWidth = s*.015;
+    ctx.lineCap = 'round';
+    ctx.translate(ex,ey-eyeR*1.55+browY*s*.05);
+    ctx.rotate(side*browAngle);
+    ctx.beginPath();
+    ctx.moveTo(-eyeR*.55,0);
+    ctx.quadraticCurveTo(0,-s*.006,eyeR*.55,0);
+    ctx.stroke();
+    ctx.restore();
+
+    // Eye white / luminous sclera.
+    ctx.fillStyle = '#fffaf5';
+    ctx.beginPath();
+    ctx.ellipse(ex,ey,w,h,0,0,Math.PI*2);
+    ctx.fill();
+
+    if(h > eyeR*.12 && blinkAmt < .88){
+      // Iris.
+      const ix = ex + eyePos.x*w*.15;
+      const iy = ey + eyePos.y*h*.12;
+      const irisR = Math.min(w,h)*.70;
+
+      const iris = ctx.createRadialGradient(
+        ix-irisR*.25,iy-irisR*.35,irisR*.08,
+        ix,iy,irisR
+      );
+      iris.addColorStop(0,'#c9f7ff');
+      iris.addColorStop(.35,'#75bff0');
+      iris.addColorStop(.72,'#7d69d9');
+      iris.addColorStop(1,'#30234f');
+
+      ctx.fillStyle = iris;
+      ctx.beginPath();
+      ctx.arc(ix,iy,irisR,0,Math.PI*2);
+      ctx.fill();
+
+      // Pupils.
+      ctx.fillStyle = '#161126';
+      ctx.beginPath();
+      ctx.ellipse(ix,iy,irisR*.38,irisR*.55,0,0,Math.PI*2);
+      ctx.fill();
+
+      // Two cute catchlights.
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(ix-irisR*.34,iy-irisR*.34,irisR*.19,0,Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(ix+irisR*.30,iy-irisR*.02,irisR*.08,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // Upper eyelid accent.
+    if(blinkAmt > .03 || from.lid > .15 || to.lid > .15){
+      const lid = Math.max(from.lid||0,to.lid||0,blinkAmt);
+      ctx.strokeStyle = `rgba(255,246,238,${Math.min(.9,lid)})`;
+      ctx.lineWidth = s*.012;
+      ctx.beginPath();
+      ctx.ellipse(ex,ey,w*.98,h*.90,0,Math.PI*1.05,Math.PI*1.95);
+      ctx.stroke();
+    }
+
+    // Blush.
+    if(cheek > .02){
+      const bx = ex+side*s*.08;
+      const by = cy+s*.095;
+      const blush = ctx.createRadialGradient(bx,by,0,bx,by,s*.075);
+      blush.addColorStop(0,`rgba(255,123,84,${Math.min(.45,cheek*.4)})`);
+      blush.addColorStop(1,'rgba(255,123,84,0)');
+      ctx.fillStyle = blush;
+      ctx.beginPath();
+      ctx.arc(bx,by,s*.075,0,Math.PI*2);
+      ctx.fill();
+
+      // Tiny blush marks.
+      ctx.strokeStyle = `rgba(255,180,150,${Math.min(.75,cheek*.75)})`;
+      ctx.lineWidth = s*.007;
+      ctx.lineCap = 'round';
+      for(let j=0;j<3;j++){
+        const dx = bx-side*s*.035+j*side*s*.024;
+        ctx.beginPath();
+        ctx.moveTo(dx-s*.008,by-s*.006);
+        ctx.lineTo(dx+s*.002,by+s*.004);
+        ctx.stroke();
+      }
+    }
+  });
+
+  // Tiny nose dot.
+  ctx.fillStyle = 'rgba(255,246,238,.42)';
+  ctx.beginPath();
+  ctx.arc(cx,cy+s*.075,s*.009,0,Math.PI*2);
+  ctx.fill();
+
+  // Cute mouth.
+  ctx.save();
+  ctx.translate(cx,cy+s*.145);
+  const mw = s*mouth.w;
+  const mc = s*mouth.curve;
+  const mo = s*mouth.open;
+
+  ctx.strokeStyle = '#fff6ee';
+  ctx.lineWidth = s*.018;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if(currentEmotion === 'happy' || targetEmotion === 'happy'){
+    // Small kawaii open smile.
+    ctx.fillStyle = '#fff6ee';
+    ctx.beginPath();
+    ctx.moveTo(-mw*.42,0);
+    ctx.quadraticCurveTo(0,mc*1.55,mw*.42,0);
+    ctx.quadraticCurveTo(0,mc*.92,-mw*.42,0);
+    ctx.fill();
+
+    ctx.fillStyle = '#ff8e76';
+    ctx.beginPath();
+    ctx.ellipse(0,mc*.75,mw*.18,Math.max(s*.008,mo*.55),0,0,Math.PI*2);
+    ctx.fill();
+  }else{
+    ctx.beginPath();
+    ctx.moveTo(-mw/2,0);
+    ctx.quadraticCurveTo(-mw*.18,mc*.65,0,mc);
+    ctx.quadraticCurveTo(mw*.18,mc*.65,mw/2,0);
+    ctx.stroke();
+
+    if(mo > .004){
+      ctx.fillStyle = '#fff6ee';
+      ctx.beginPath();
+      ctx.ellipse(0,mc*.42,mw*.23,mo,0,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
   ctx.restore();
 
-  // cheeks for happy
-  const cheek = lerp(from.cheek||0, to.cheek||0, k);
-  if(cheek>0.02){
-    ctx.fillStyle = 'rgba(255,123,84,'+ (cheek*0.5) +')';
-    [-1,1].forEach(side=>{
-      ctx.beginPath();
-      ctx.ellipse(cx+side*s*0.29, cy+s*0.07, s*0.045, s*0.03,0,0,Math.PI*2);
-      ctx.fill();
-    });
+  // Tiny floating heart when happy.
+  if(currentEmotion === 'happy' || targetEmotion === 'happy'){
+    const hx = cx+s*.27;
+    const hy = cy-s*.22+Math.sin(t*1.8)*s*.012;
+    const hs = s*.025;
+    ctx.fillStyle = 'rgba(255,123,84,.82)';
+    ctx.beginPath();
+    ctx.moveTo(hx,hy+hs);
+    ctx.bezierCurveTo(hx-hs*1.7,hy-hs*.1,hx-hs,hy-hs*1.45,hx,hy-hs*.65);
+    ctx.bezierCurveTo(hx+hs,hy-hs*1.45,hx+hs*1.7,hy-hs*.1,hx,hy+hs);
+    ctx.fill();
   }
 
   ctx.restore();
 }
 
+function roundRect(ctx,x,y,w,h,r){
+  const rr = Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+}
+
 function lerp(a,b,k){ return a+(b-a)*k; }
-function lerpMouth(a,b,k){ return {w:lerp(a.w,b.w,k), curve:lerp(a.curve,b.curve,k), open:lerp(a.open,b.open,k)}; }
+function lerpMouth(a,b,k){
+  return {
+    w:lerp(a.w,b.w,k),
+    curve:lerp(a.curve,b.curve,k),
+    open:lerp(a.open,b.open,k)
+  };
+}
 function easeInOut(x){ return x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2; }
 
 function shapeFor(e,t){
   switch(e){
-    case "happy": return {eyeH:0.62,eyeW:1.05,brow:0.02,browY:-0.3,tilt:0,wander:0.4,cheek:1,
-      mouth:{w:0.46,curve:0.13,open:0}};
-    case "curious": return {eyeH:1.15,eyeW:0.92,brow:0.16,browY:-0.7,tilt:0.045,wander:1,cheek:0,
-      mouth:{w:0.24,curve:0.04,open:0.02}};
-    case "sleepy": return {eyeH:0.18,eyeW:1,brow:-0.02,browY:0.1,tilt:0,wander:0.15,cheek:0,
-      mouth:{w:0.28,curve:0.02,open:0}};
-    case "startled": return {eyeH:1.5,eyeW:1.2,brow:0,browY:-1,tilt:0,wander:0.6,cheek:0,
-      mouth:{w:0.2,curve:-0.02,open:0.06}};
-    case "confused": return {eyeH:0.95,eyeW:0.85,brow:0.22,browY:-0.4,tilt:0.09,wander:0.6,cheek:0,
-      mouth:{w:0.3,curve:-0.06,open:0}};
-    case "listening": return {eyeH:1.05,eyeW:1,brow:0.05,browY:-0.4,tilt:0,wander:0.2,cheek:0.3,
-      mouth:{w:0.22,curve:0.02,open:0.015}};
-    case "thinking": return {eyeH:0.55,eyeW:0.9,brow:0.1,browY:-0.2,tilt:0.06,wander:0.1,cheek:0,
-      mouth:{w:0.2,curve:-0.03,open:0}};
-    default: return {eyeH:0.85,eyeW:1,brow:0,browY:-0.2,tilt:0,wander:0.6,cheek:0.1,
-      mouth:{w:0.3,curve:0.06,open:0}};
+    case "happy": return {
+      eyeH:.72,eyeW:1.05,brow:.02,browY:-.38,tilt:0,wander:.5,
+      cheek:1,glow:1,lid:.05,mouth:{w:.34,curve:.10,open:.035}
+    };
+    case "curious": return {
+      eyeH:1.12,eyeW:.94,brow:.16,browY:-.72,tilt:.055,wander:1,
+      cheek:.05,glow:.55,lid:.02,mouth:{w:.25,curve:.035,open:.008}
+    };
+    case "sleepy": return {
+      eyeH:.22,eyeW:1.02,brow:-.02,browY:.08,tilt:-.02,wander:.12,
+      cheek:0,glow:.12,lid:.65,mouth:{w:.25,curve:.018,open:.008}
+    };
+    case "startled": return {
+      eyeH:1.52,eyeW:1.18,brow:0,browY:-1.02,tilt:0,wander:.72,
+      cheek:0,glow:1.1,lid:0,mouth:{w:.24,curve:-.025,open:.08}
+    };
+    case "confused": return {
+      eyeH:.98,eyeW:.88,brow:.24,browY:-.44,tilt:.11,wander:.65,
+      cheek:.05,glow:.6,lid:.08,mouth:{w:.29,curve:-.065,open:.01}
+    };
+    case "listening": return {
+      eyeH:1.07,eyeW:1.01,brow:.05,browY:-.48,tilt:0,wander:.25,
+      cheek:.30,glow:.8,lid:.02,mouth:{w:.24,curve:.025,open:.018}
+    };
+    case "thinking": return {
+      eyeH:.58,eyeW:.91,brow:.12,browY:-.22,tilt:.075,wander:.08,
+      cheek:0,glow:.72,lid:.12,mouth:{w:.22,curve:-.035,open:.006}
+    };
+    default: return {
+      eyeH:.86,eyeW:1.02,brow:0,browY:-.22,tilt:0,wander:.62,
+      cheek:.10,glow:.32,lid:.02,mouth:{w:.27,curve:.055,open:0}
+    };
   }
 }
 
@@ -568,9 +833,15 @@ function say(text){
   bubble.classList.add('show');
   clearTimeout(bubbleTimeout);
   bubbleTimeout = setTimeout(()=> bubble.classList.remove('show'), 3400);
+
   if('speechSynthesis' in window){
     const u = new SpeechSynthesisUtterance(text);
-    u.pitch = 1.3; u.rate = 1.02;
+    u.pitch = 1.3;
+    u.rate = 1.02;
+
+    u.onstart = ()=> setEmotion('happy');
+    u.onend = ()=> setEmotion('curious');
+
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
   }
