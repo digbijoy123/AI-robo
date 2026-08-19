@@ -43,222 +43,43 @@
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4), 0 10px 30px rgba(0,0,0,0.35);
   }
 
-  /* ---------- Status bar ---------- */
-  .statusbar{
-    position:absolute; top:0; left:0; right:0; height:78px; padding:10px 14px 0;
-    z-index:10; pointer-events:none; font-family:'JetBrains Mono',monospace;
-    font-size:9px; color:var(--ink); font-weight:500; letter-spacing:.02em;
-  }
-  .status-top,.status-bottom{display:flex; align-items:center; justify-content:space-between; gap:8px;}
-  .status-top{height:25px;}
-  .status-bottom{height:25px; margin-top:3px; justify-content:flex-start;}
-  .brand-label{font-weight:700; font-size:11px; white-space:nowrap;}
-  .brand-label span{font-weight:500; opacity:.55; margin-left:3px;}
-  .emotion-status{font-size:9px; opacity:.65; text-transform:uppercase; text-align:center; white-space:nowrap;}
-  .battery-status{font-size:10px; white-space:nowrap;}
-  .status-pill{
-    display:flex; align-items:center; gap:5px; padding:4px 7px; border-radius:10px;
-    background:rgba(255,255,255,.32); white-space:nowrap;
-  }
-  .dot{width:6px; height:6px; flex:0 0 6px; border-radius:50%; background:var(--mint-dim);}
+  /* ---------- Clean responsive status bar ---------- */
+  .statusbar{position:absolute;top:0;left:0;right:0;height:108px;padding:12px 14px 0;z-index:30;pointer-events:none;font-family:'JetBrains Mono',monospace;color:var(--ink);}
+  .status-top{height:34px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;}
+  .brand-label{font-weight:700;font-size:14px;white-space:nowrap;}
+  .brand-label span{font-weight:500;opacity:.55;margin-left:3px;}
+  .emotion-status{font-size:8px;opacity:.75;text-transform:uppercase;text-align:center;white-space:nowrap;padding:7px 10px;border-radius:15px;background:rgba(255,255,255,.28);}
+  .battery-status{font-size:9px;white-space:nowrap;padding:7px 9px;border-radius:15px;background:rgba(255,255,255,.28);}
+  .status-bottom{height:32px;margin-top:5px;display:flex;align-items:center;gap:7px;}
+  .status-pill{display:flex;align-items:center;gap:5px;padding:6px 9px;border-radius:13px;background:rgba(255,255,255,.32);white-space:nowrap;font-size:8px;}
+  .dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--mint);}
   .dot.off{background:var(--danger);}
   .pulse{animation:pulse 1.6s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
-  #emotionLabel{text-transform:uppercase; opacity:.8;}
+  #emotionLabel{text-transform:uppercase;opacity:.8;}
 
-  /* ---------- Redesigned portrait layout ---------- */
-  .statusbar{
-    position:absolute; top:0; left:0; right:0; height:164px; padding:14px 14px 0;
-    z-index:30; pointer-events:none; font-family:'JetBrains Mono',monospace;
-    color:var(--ink);
-  }
-  .top-header{
-    height:48px; display:grid; grid-template-columns:1.15fr auto auto auto;
-    align-items:center; gap:8px;
-  }
-  .brand-block{min-width:0;}
-  .brand-label{font-weight:700; font-size:14px; letter-spacing:.02em; white-space:nowrap;}
-  .brand-label span{font-weight:500; opacity:.52; margin-left:3px;}
-  .brand-sub{font-size:7px; letter-spacing:.18em; opacity:.48; margin-top:2px;}
-  .emotion-chip,.connect-chip,.battery-chip{
-    height:34px; border-radius:18px; display:flex; align-items:center; justify-content:center;
-    gap:6px; padding:0 10px; background:rgba(255,255,255,.30);
-    box-shadow:0 4px 12px rgba(44,36,64,.04);
-    white-space:nowrap;
-  }
-  .emotion-chip{font-size:8px; text-transform:uppercase;}
-  .emotion-mini{color:var(--mint-dim); font-size:10px;}
-  .connect-chip{
-    pointer-events:auto; border:0; color:var(--ink); cursor:pointer;
-    font:600 8px 'JetBrains Mono',monospace; letter-spacing:.03em;
-  }
-  .battery-chip{font-size:9px; min-width:58px;}
-  .battery-icon{
-    width:20px; height:10px; border:1.5px solid var(--mint-dim); border-radius:3px;
-    position:relative; display:inline-block;
-  }
-  .battery-icon::after{content:""; position:absolute; right:-4px; top:2px; width:2px; height:5px;
-    border-radius:0 2px 2px 0; background:var(--mint-dim);}
-  .battery-icon::before{content:""; position:absolute; inset:2px 3px 2px 2px; border-radius:1px;
-    background:var(--mint);}
-  .system-row{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;}
-  .system-card{
-    min-width:0; height:48px; padding:7px 9px; border-radius:16px;
-    background:rgba(255,255,255,.34); display:flex; align-items:center; gap:7px;
-    box-shadow:0 5px 15px rgba(44,36,64,.04);
-  }
-  .system-card .system-icon{
-    width:9px; height:9px; border-radius:50%; background:var(--mint); flex:0 0 9px;
-    box-shadow:0 0 0 4px rgba(63,191,174,.10);
-  }
-  .system-card .system-icon.off,.system-card .dot.off{background:var(--danger); box-shadow:0 0 0 4px rgba(232,89,92,.08);}
-  .system-card strong{display:block; font-size:8px; letter-spacing:.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .system-card small{display:block; font-size:6px; opacity:.52; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  /* ---------- Large central face ---------- */
+  #faceWrap{position:absolute;left:26px;right:26px;top:118px;bottom:275px;display:flex;align-items:center;justify-content:center;z-index:5;}
+  .face-name{position:absolute;top:2%;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.34em;color:rgba(44,36,64,.23);font-weight:600;pointer-events:none;}
+  canvas#face{display:block;width:min(100%,420px)!important;height:auto!important;filter:drop-shadow(0 18px 28px rgba(44,36,64,.10));}
+  #faceWrap::after{content:"";position:absolute;inset:8% 8%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.12),transparent 60%);pointer-events:none;mix-blend-mode:screen;}
 
-  /* Camera and emotion controls are now placed around the face instead of over the header. */
-  .portrait .cam-popup{
-    top:178px; right:14px; width:116px; height:88px; border-radius:18px;
-    z-index:28;
-  }
-  .portrait .emotion-row{
-    top:182px; left:12px; width:48px; padding:7px 5px; border-radius:22px;
-    flex-direction:column; gap:9px; background:rgba(255,255,255,.28);
-    box-shadow:0 8px 22px rgba(44,36,64,.07);
-  }
-  .emotion-row button{width:10px;height:10px;}
-
-  /* ---------- Face canvas ---------- */
-  #faceWrap{
-    position:absolute; left:54px; right:54px; top:205px; bottom:340px;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .face-name{
-    position:absolute; top:2%; left:50%; transform:translateX(-50%);
-    font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:.34em;
-    color:rgba(44,36,64,.22); font-weight:600; pointer-events:none;
-  }
-  canvas#face{
-    display:block; width:min(100%, 390px) !important; height:auto !important;
-    filter:drop-shadow(0 18px 28px rgba(44,36,64,.10));
-  }
-  #faceWrap::after{
-    content:""; position:absolute; inset:8% 8%; border-radius:50%;
-    background:radial-gradient(circle,rgba(255,255,255,.12),transparent 60%);
-    pointer-events:none; mix-blend-mode:screen;
-  }
-
-  /* ---------- Listening panel ---------- */
-  .listen-panel{
-    position:absolute; left:14px; right:14px; bottom:132px; min-height:74px;
-    padding:11px 13px; border-radius:20px; z-index:27;
-    background:rgba(255,255,255,.34); border:1px solid rgba(255,255,255,.42);
-    box-shadow:0 8px 24px rgba(44,36,64,.06);
-    transition:transform .2s ease, box-shadow .2s ease;
-  }
-  .listen-title{font:700 8px 'JetBrains Mono',monospace; letter-spacing:.12em; color:var(--coral);}
-  .listen-title .wave-icon{font-size:9px; margin-right:4px;}
-  .listen-text{margin-top:7px; padding-right:85px; font:600 12px 'JetBrains Mono',monospace;
-    color:var(--ink); min-height:18px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .waveform{position:absolute; right:13px; top:28px; height:31px; display:flex; align-items:center; gap:3px;}
-  .waveform i{display:block; width:3px; height:8px; border-radius:4px; background:var(--coral); opacity:.45;}
-  .waveform i:nth-child(2){height:14px}.waveform i:nth-child(3){height:22px}.waveform i:nth-child(4){height:11px}
-  .waveform i:nth-child(5){height:27px}.waveform i:nth-child(6){height:15px}.waveform i:nth-child(7){height:24px}
-  .waveform i:nth-child(8){height:10px}.waveform i:nth-child(9){height:19px}.waveform i:nth-child(10){height:13px}
-  .listen-panel.active{transform:translateY(-2px); box-shadow:0 12px 28px rgba(255,123,84,.13);}
-  .listen-panel.active .waveform i{animation:voice-bars .65s ease-in-out infinite alternate; opacity:.9;}
-  .listen-panel.active .waveform i:nth-child(2){animation-delay:.08s}.listen-panel.active .waveform i:nth-child(3){animation-delay:.16s}
-  .listen-panel.active .waveform i:nth-child(4){animation-delay:.24s}.listen-panel.active .waveform i:nth-child(5){animation-delay:.32s}
-  .listen-panel.active .waveform i:nth-child(6){animation-delay:.40s}.listen-panel.active .waveform i:nth-child(7){animation-delay:.48s}
-  @keyframes voice-bars{from{transform:scaleY(.45)}to{transform:scaleY(1.25)}}
-
-  .mode-card{
-    position:absolute; bottom:49px; z-index:27; width:82px; height:54px; border-radius:17px;
-    background:rgba(255,255,255,.32); display:flex; align-items:center; gap:7px;
-    padding:7px 8px; box-shadow:0 7px 18px rgba(44,36,64,.05);
-  }
-  .voice-card{left:14px}.ai-card{right:14px;}
-  .mode-icon{font-size:18px; color:var(--mint-dim);}
-  .ai-card .mode-icon{color:#8067d8;}
-  .mode-card b{display:block;font:700 7px 'JetBrains Mono',monospace;letter-spacing:.04em;}
-  .mode-card small{display:block;margin-top:3px;font:700 7px 'JetBrains Mono',monospace;color:var(--mint-dim);}
-  .ai-card small{color:#8067d8;}
-
-  /* ---------- Mic button ---------- */
-  #micBtn{
-    position:absolute; z-index:29; width:74px; height:74px; border-radius:50%; border:0;
-    bottom:38px; left:50%; transform:translateX(-50%);
-    background:linear-gradient(160deg,#ff9a69,var(--coral));
-    box-shadow:0 10px 28px rgba(217,103,63,.40),0 0 0 10px rgba(255,123,84,.07),inset 0 1px 2px rgba(255,255,255,.55);
-    display:flex;align-items:center;justify-content:center;cursor:pointer;
-  }
-  #micBtn svg{width:29px;height:29px;}
-  #micBtn.listening{animation:mic-glow 1s ease-in-out infinite;}
-  #micBtn.talking{animation:talk-mic 0.55s ease-in-out infinite alternate;}
-  @keyframes mic-glow{0%,100%{box-shadow:0 10px 28px rgba(217,103,63,.40),0 0 0 0 rgba(255,123,84,.35)}50%{box-shadow:0 10px 28px rgba(217,103,63,.40),0 0 0 13px rgba(255,123,84,0)}}
-  @keyframes talk-mic{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.05)}}
-
-  /* Footer */
-  .version-footer{position:absolute;left:0;right:0;bottom:9px;text-align:center;z-index:26;
-    font:600 7px 'JetBrains Mono',monospace;letter-spacing:.12em;color:rgba(44,36,64,.42);}
-
-  /* Keep original landscape controls, but make them coherent. */
-  .landscape #faceWrap{left:120px;right:120px;top:92px;bottom:86px;}
-  .landscape .listen-panel{display:none;}
-  .landscape .mode-card,.landscape .version-footer{display:none;}
+  /* ---------- Camera / emotion / mic controls ---------- */
+  .portrait .cam-popup{top:116px;right:14px;width:112px;height:84px;z-index:25;}
   .landscape .cam-popup{width:96px;height:70px;top:54px;left:14px;right:auto;}
-  .landscape .emotion-row{top:12px;left:50%;transform:translateX(-50%);background:none;padding:0;}
-  .landscape #micBtn{bottom:18px;right:130px;left:auto;transform:none;}
-  .landscape #connectBtn{top:8px;right:14px;}
-
-  /* ---------- Face canvas ---------- */
-  #faceWrap{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
-  .face-name{
-    position:absolute; top:12%; left:50%; transform:translateX(-50%);
-    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.28em;
-    color:rgba(44,36,64,.30); font-weight:600; pointer-events:none;
-  }
-  canvas#face{
-    display:block;
-    filter: drop-shadow(0 18px 28px rgba(44,36,64,0.08));
-  }
-  #faceWrap::after{
-    content:"";
-    position:absolute; inset:18% 18%;
-    border-radius:50%;
-    background:radial-gradient(circle, rgba(255,255,255,.10), transparent 58%);
-    pointer-events:none;
-    mix-blend-mode:screen;
-  }
-
-  /* ---------- Camera popup ---------- */
-  .cam-popup{
-    position:absolute; width:104px; height:78px; border-radius:14px; overflow:hidden;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.3), 0 0 0 3px rgba(255,255,255,0.55);
-    background:#000; z-index:20; transition: width .25s ease, height .25s ease, top .25s ease, right .25s ease;
-  }
-  .cam-popup video{width:100%; height:100%; object-fit:cover; transform:scaleX(-1);}
-  .cam-popup .cam-tag{
-    position:absolute; bottom:3px; left:6px; font-family:'JetBrains Mono',monospace; font-size:8px;
-    color:#fff; background:rgba(0,0,0,0.35); padding:1px 5px; border-radius:6px; letter-spacing:.03em;
-  }
-  .cam-popup .cam-dot{position:absolute; top:5px; right:6px; width:6px; height:6px; border-radius:50%; background:var(--coral); animation:pulse 1.4s ease-in-out infinite;}
-
-  /* portrait placement */
-  .portrait .cam-popup{ top:88px; right:14px; width:112px; height:84px; }
-  /* landscape placement (smaller, tucked corner) */
-  .landscape .cam-popup{ width:96px; height:70px; top:54px; left:14px; right:auto;}
-
-  /* ---------- Mic button ---------- */
-  #micBtn{
-    position:absolute; z-index:20; width:64px; height:64px; border-radius:50%; border:none;
-    background: linear-gradient(160deg, var(--coral), var(--coral-dim));
-    box-shadow: 0 6px 16px rgba(217,103,63,0.45), inset 0 1px 1px rgba(255,255,255,0.5);
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
-  }
-  #micBtn svg{width:26px; height:26px;}
+  .portrait .emotion-row{top:132px;left:12px;width:36px;padding:8px 5px;border-radius:19px;flex-direction:column;align-items:center;gap:9px;background:rgba(255,255,255,.28);box-shadow:0 8px 18px rgba(44,36,64,.05);}
+  .landscape .emotion-row{top:12px;left:50%;transform:translateX(-50%);}
+  .emotion-row{position:absolute;z-index:25;display:flex;gap:6px;}
+  .emotion-row button{width:10px;height:10px;border-radius:50%;border:none;background:rgba(44,36,64,.25);cursor:pointer;padding:0;}
+  .emotion-row button.active{background:var(--mint-dim);transform:scale(1.35);}
+  #micBtn{position:absolute;z-index:29;width:72px;height:72px;border-radius:50%;border:none;background:linear-gradient(160deg,var(--coral),var(--coral-dim));box-shadow:0 8px 22px rgba(217,103,63,.42),inset 0 1px 1px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  #micBtn svg{width:28px;height:28px;}
   #micBtn.listening{animation:mic-glow 1s ease-in-out infinite;}
-  @keyframes mic-glow{0%,100%{box-shadow:0 6px 16px rgba(217,103,63,0.45), 0 0 0 0 rgba(255,123,84,0.5);}50%{box-shadow:0 6px 16px rgba(217,103,63,0.45), 0 0 0 14px rgba(255,123,84,0);}}
-  /* Placement is defined in the redesigned layout above. */
+  #micBtn.talking{animation:talk-mic .55s ease-in-out infinite alternate;}
+  @keyframes mic-glow{0%,100%{box-shadow:0 8px 22px rgba(217,103,63,.42),0 0 0 0 rgba(255,123,84,.35)}50%{box-shadow:0 8px 22px rgba(217,103,63,.42),0 0 0 13px rgba(255,123,84,0)}}
+  @keyframes talk-mic{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.055)}}
+  .portrait #micBtn{bottom:18px;left:50%;transform:translateX(-50%);}
+  .landscape #micBtn{bottom:18px;right:130px;left:auto;transform:none;}
 
   /* ---------- D-pad (robot controls) ---------- */
   .dpad{position:absolute; z-index:20; display:grid; grid-template-columns:repeat(3,40px); grid-template-rows:repeat(3,40px); gap:4px;}
@@ -276,22 +97,9 @@
   .dpad .right{grid-column:3; grid-row:2;}
   .dpad .down{grid-column:2; grid-row:3;}
 
-  /* ---------- Emotion picker (debug / manual override) ---------- */
-  .emotion-row{position:absolute; z-index:20; display:flex; gap:6px;}
-  .portrait .emotion-row{ top:52px; left:16px; flex-direction:column; }
-  .landscape .emotion-row{ top:12px; left:50%; transform:translateX(-50%); }
-  .emotion-row button{
-    width:10px; height:10px; border-radius:50%; border:none; background:rgba(44,36,64,0.25); cursor:pointer; padding:0;
-  }
-  .emotion-row button.active{ background:var(--mint-dim); transform:scale(1.3); }
-
   /* ---------- Connect button ---------- */
-  #connectBtn{
-    position:absolute; z-index:20; top:8px; right:14px; font-family:'JetBrains Mono',monospace; font-size:10px;
-    background:rgba(44,36,64,0.08); border:none; color:var(--ink); padding:5px 10px; border-radius:20px; cursor:pointer;
-    letter-spacing:.02em;
-  }
-  .landscape #connectBtn{ top:8px; right:14px; }
+  #connectBtn{position:absolute;z-index:31;top:12px;right:14px;font-family:'JetBrains Mono',monospace;font-size:8px;background:rgba(255,255,255,.38);border:0;color:var(--ink);padding:8px 11px;border-radius:18px;cursor:pointer;letter-spacing:.02em;pointer-events:auto;}
+  .landscape #connectBtn{top:8px;right:14px;}
 
   /* ---------- Toast / speech bubble ---------- */
   #speechBubble{
@@ -304,27 +112,17 @@
   .portrait #speechBubble.show{ transform:translateX(-50%) translateY(0); }
   .landscape #speechBubble{ bottom:90px; right:16px; }
 
-  .listen-caption{
-    position:absolute; z-index:24; left:50%; bottom:96px; transform:translateX(-50%);
-    width:min(86%,520px); min-height:34px; padding:8px 14px;
-    border-radius:18px; background:rgba(44,36,64,0.82); color:#fff;
-    font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.35;
-    text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.18);
-    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    opacity:0; transition:opacity .18s ease, transform .18s ease;
-    pointer-events:none; overflow:hidden;
-  }
-  .listen-caption.show{opacity:1; transform:translateX(-50%) translateY(-2px);}
-  .listen-caption .prefix{opacity:.65; margin-right:5px;}
-  .landscape .listen-caption{left:16px; right:16px; bottom:86px; width:auto; transform:none;}
-  .landscape .listen-caption.show{transform:translateY(-2px);}
-  .version-badge{
-    position:absolute; z-index:31; left:14px; bottom:8px; padding:3px 7px;
-    border-radius:9px; background:rgba(44,36,64,.08); color:rgba(44,36,64,.55);
-    font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:.04em;
-    pointer-events:none;
-  }
-  .hint{position:absolute; z-index:30; inset:auto 0 0 0; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(255,255,255,0.3); padding-bottom:2px; pointer-events:none;}
+  .listen-caption{position:absolute;z-index:27;left:14px;right:14px;bottom:94px;width:auto;min-height:58px;padding:10px 13px;border-radius:19px;background:rgba(255,255,255,.38);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.35;text-align:left;box-shadow:0 8px 24px rgba(44,36,64,.07);border:1px solid rgba(255,255,255,.45);opacity:0;transform:translateY(7px);transition:opacity .18s ease,transform .18s ease;pointer-events:none;overflow:hidden;}
+  .listen-caption.show{opacity:1;transform:translateY(0);}
+  .listen-caption .prefix{display:block;font-size:7px;letter-spacing:.12em;color:var(--coral);margin-bottom:5px;opacity:.8;}
+  .voice-bars{position:absolute;right:13px;bottom:12px;display:flex;align-items:center;gap:3px;}
+  .voice-bars i{width:3px;height:8px;border-radius:3px;background:var(--coral);opacity:.4;}
+  .listen-caption.show .voice-bars i{animation:voicebar .55s ease-in-out infinite alternate;}
+  .voice-bars i:nth-child(2){animation-delay:.08s}.voice-bars i:nth-child(3){animation-delay:.16s}.voice-bars i:nth-child(4){animation-delay:.24s}.voice-bars i:nth-child(5){animation-delay:.32s}
+  @keyframes voicebar{from{transform:scaleY(.5)}to{transform:scaleY(1.6)}}
+
+  .version-badge{position:absolute;z-index:31;left:50%;bottom:5px;transform:translateX(-50%);padding:3px 7px;border-radius:9px;background:rgba(44,36,64,.07);color:rgba(44,36,64,.42);font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.08em;pointer-events:none;}
+  .hint{position:absolute; z-index:30; inset:auto 0 2px 0; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(255,255,255,0.3); padding-bottom:2px; pointer-events:none;}
 </style>
 </head>
 <body>
@@ -333,39 +131,19 @@
     <div class="cam-notch"></div>
     <div class="screen">
       <div class="statusbar">
-        <div class="top-header">
-          <div class="brand-block">
-            <div class="brand-label">ROBO <span>v1.0</span></div>
-            <div class="brand-sub">AI ASSISTANT</div>
-          </div>
-
-          <div class="emotion-chip">
-            <span class="emotion-mini">●</span>
-            <span id="emotionLabel">CURIOUS</span>
-          </div>
-
-          <button id="connectBtn" class="connect-chip">⌁ CONNECT ROBOT</button>
-
-          <div class="battery-chip">
-            <span class="battery-icon"></span>
-            <span id="battLabel">82%</span>
-          </div>
+        <div class="status-top">
+          <div class="brand-label">ROBO <span>v1.0</span></div>
+          <div class="emotion-status" id="emotionLabel">CURIOUS</div>
+          <div class="battery-status"><span id="battLabel">82%</span></div>
         </div>
-
-        <div class="system-row">
-          <div class="system-card" id="mediaStatus">
-            <span class="system-icon">●</span>
-            <div>
-              <strong id="mediaLabel">CAM + MIC OK</strong>
-              <small>Camera &amp; microphone ready</small>
-            </div>
+        <div class="status-bottom">
+          <div class="status-pill" id="mediaStatus">
+            <span class="dot off" id="mediaDot"></span>
+            <span id="mediaLabel">MEDIA OFF</span>
           </div>
-          <div class="system-card" id="connStatus">
-            <span class="system-icon off" id="connDot"></span>
-            <div>
-              <strong id="connLabel">ROBOT OFFLINE</strong>
-              <small>Tap connect to control</small>
-            </div>
+          <div class="status-pill" id="connStatus">
+            <span class="dot off" id="connDot"></span>
+            <span id="connLabel">ROBOT OFFLINE</span>
           </div>
         </div>
       </div>
@@ -385,30 +163,14 @@
 
       <div id="speechBubble"></div>
 
+      <button id="connectBtn">connect robot</button>
+
       <div class="dpad">
         <button class="up" data-cmd="F">▲</button>
         <button class="left" data-cmd="L">◀</button>
         <button class="stop" data-cmd="S">■</button>
         <button class="right" data-cmd="R">▶</button>
         <button class="down" data-cmd="B">▼</button>
-      </div>
-
-      <div class="listen-panel" id="listenPanel" aria-live="polite">
-        <div class="listen-title"><span class="wave-icon">◉</span> ROBO HEARS</div>
-        <div class="listen-text" id="listenText">Listening… say something!</div>
-        <div class="waveform" id="waveform">
-          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-        </div>
-      </div>
-
-      <div class="mode-card voice-card">
-        <span class="mode-icon">◖</span>
-        <div><b>VOICE</b><small id="voiceState">ON</small></div>
-      </div>
-
-      <div class="mode-card ai-card">
-        <span class="mode-icon">✦</span>
-        <div><b>AI MODE</b><small>ACTIVE</small></div>
       </div>
 
       <button id="micBtn" aria-label="talk to Robo">
@@ -418,14 +180,13 @@
           <line x1="12" y1="19" x2="12" y2="23"></line>
         </svg>
       </button>
+
+      <div class="listen-caption" id="listenCaption" aria-live="polite">
+        <span class="prefix">ROBO HEARS</span><span id="listenText">Tap the mic and speak…</span><span class="voice-bars"><i></i><i></i><i></i><i></i><i></i></span>
+      </div>
+      <div class="version-badge">ROBO • VERSION 1.0</div>
+      <div class="hint" id="hint">tap the mic to talk • camera preview shows what Robo sees</div>
     </div>
-    <div class="listen-caption" id="listenCaption" aria-live="polite">
-      <span class="prefix">ROBO HEARS:</span><span id="listenText">Tap the mic and speak…</span>
-    </div>
-  </div>
-  <div class="version-badge">ROBO • VERSION 1.0</div>
-  <div class="version-footer">ROBO • VERSION 1.0 • AI ASSISTANT</div>
-  <div class="hint" id="hint">tap the mic to talk • camera preview shows what Robo sees</div>
 </div>
 
 <script>
@@ -449,7 +210,7 @@ let talking = false;
 let talkPhase = 0;
 
 const emotionRow = document.getElementById('emotionRow');
-EMOTIONS.filter(e=>!["listening","thinking"].includes(e)).forEach(e=>{
+EMOTIONS.filter(e=>!["listening","thinking","talking"].includes(e)).forEach(e=>{
   const b = document.createElement('button');
   b.title = e;
   b.addEventListener('click', ()=> setEmotion(e, true));
@@ -457,7 +218,7 @@ EMOTIONS.filter(e=>!["listening","thinking"].includes(e)).forEach(e=>{
 });
 function refreshEmotionDots(){
   [...emotionRow.children].forEach((el,i)=>{
-    const e = EMOTIONS.filter(x=>!["listening","thinking"].includes(x))[i];
+    const e = EMOTIONS.filter(x=>!["listening","thinking","talking"].includes(x))[i];
     el.classList.toggle('active', e === currentEmotion);
   });
 }
@@ -485,7 +246,7 @@ let dpr = Math.min(window.devicePixelRatio||1, 2);
 
 function sizeCanvas(){
   const wrap = document.getElementById('faceWrap');
-  const s = Math.min(wrap.clientWidth, wrap.clientHeight) * 0.96;
+  const s = Math.min(wrap.clientWidth, wrap.clientHeight) * 0.88;
   canvas.style.width = s+'px'; canvas.style.height = s+'px';
   canvas.width = s*dpr; canvas.height = s*dpr;
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -551,14 +312,11 @@ function draw(dt){
   const browAngle = lerp(from.brow,to.brow,k);
   const browY = lerp(from.browY,to.browY,k);
   let mouth = lerpMouth(from.mouth,to.mouth,k);
-
-  // Talking animation: jaw/mouth pulses at a speech-like rhythm.
   if(talking || currentEmotion === 'talking' || targetEmotion === 'talking'){
     talkPhase += dt/1000;
-    const speechPulse = 0.5 + 0.5*Math.sin(talkPhase*15.5) + 0.18*Math.sin(talkPhase*27.0);
-    mouth.open = Math.max(mouth.open, 0.018 + speechPulse*0.045);
-    mouth.w = mouth.w * (0.96 + speechPulse*0.06);
-    mouth.curve += Math.sin(talkPhase*9)*s*0.002;
+    const pulse = 0.5 + 0.5*Math.sin(talkPhase*15.5) + 0.18*Math.sin(talkPhase*27);
+    mouth.open = Math.max(mouth.open, 0.018 + pulse*0.045);
+    mouth.w *= 0.96 + pulse*0.06;
   } else {
     talkPhase = 0;
   }
@@ -1013,10 +771,7 @@ const listenText = document.getElementById('listenText');
 let captionTimer = null;
 
 function setListenCaption(text, visible=true){
-  const value = text || 'Listening…';
-  listenText.textContent = value;
-  const panelText = document.getElementById('listenText');
-  if(panelText) panelText.textContent = value;
+  listenText.textContent = text || 'Listening…';
   listenCaption.classList.toggle('show', visible);
 }
 
@@ -1030,15 +785,12 @@ const bubble = document.getElementById('speechBubble');
 let bubbleTimeout;
 function setTalkingState(on){
   talking = on;
-  const panel = document.getElementById('listenPanel');
-  const mic = document.getElementById('micBtn');
+  const btn = document.getElementById('micBtn');
   if(on){
     setEmotion('talking');
-    panel.classList.add('active');
-    mic.classList.add('talking');
+    btn.classList.add('talking');
   }else{
-    panel.classList.remove('active');
-    mic.classList.remove('talking');
+    btn.classList.remove('talking');
     setEmotion('curious');
   }
 }
@@ -1048,948 +800,20 @@ function say(text){
   bubble.classList.add('show');
   clearTimeout(bubbleTimeout);
   bubbleTimeout = setTimeout(()=> bubble.classList.remove('show'), 3400);
-
-  // Show Robo's spoken response in the listening panel.
   setListenCaption(text, true);
-  document.getElementById('listenText').textContent = text;
 
   if('speechSynthesis' in window){
     const u = new SpeechSynthesisUtterance(text);
     u.pitch = 1.18;
     u.rate = 1.02;
-
     u.onstart = ()=> setTalkingState(true);
     u.onend = ()=> setTalkingState(false);
     u.onerror = ()=> setTalkingState(false);
-
     speechSynthesis.cancel();
+    setTalkingState(true);
     speechSynthesis.speak(u);
   }else{
     setTalkingState(false);
-  }
-}
-
-/* ---------------- Placeholder "brain" ----------------
-   Swap this function's body for a real API call later —
-   send `text` to your LLM of choice and return its reply. */
-function runBrain(text){
-  const lower = text.toLowerCase();
-  if(/hi|hello|hey/.test(lower)){ setEmotion('happy'); return "Hey! Good to see you."; }
-  if(/how are you/.test(lower)){ setEmotion('happy'); return "Running at 82% battery and feeling curious!"; }
-  if(/\?/.test(lower)){ setEmotion('curious'); return "Hmm, good question — I'm still a simple brain for now, but I'm listening."; }
-  if(/sleep|tired|night/.test(lower)){ setEmotion('sleepy'); return "Getting a little sleepy myself..."; }
-  if(/forward|left|right|back|stop|move/.test(lower)){ setEmotion('neutral'); return "Got it — driving now."; }
-  setEmotion('confused'); return "I didn't quite catch that — I'm a simple brain for now.";
-}
-
-/* ---------------- Voice loop (Web Speech API) ---------------- */
-const micBtn = document.getElementById('micBtn');
-let recognition = null;
-let listening = false;
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-if(SR){
-  recognition = new SR();
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
-  recognition.lang = 'en-US';
-  recognition.onstart = ()=>{
-    listening = true;
-    micBtn.classList.add('listening');
-    setEmotion('listening');
-    lastInteraction = Date.now();
-    clearTimeout(captionTimer);
-    setListenCaption('Listening…', true);
-    document.getElementById('listenPanel').classList.add('active');
-  };
-
-  recognition.onend = ()=>{
-    listening = false;
-    micBtn.classList.remove('listening');
-    hideListenCaption(5000);
-  };
-
-  recognition.onresult = (e)=>{
-    let transcript = '';
-    for(let i=0; i<e.results.length; i++){
-      transcript += e.results[i][0].transcript + ' ';
-    }
-    transcript = transcript.trim();
-
-    if(transcript){
-      setListenCaption(transcript, true);
-      lastInteraction = Date.now();
-    }
-
-    let finalText = '';
-    for(let i=e.resultIndex; i<e.results.length; i++){
-      if(e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
-    }
-    finalText = finalText.trim();
-
-    if(finalText){
-      setListenCaption(finalText, true);
-      setEmotion('thinking');
-      setTimeout(()=>{ const reply = runBrain(finalText); say(reply); }, 500);
-    }
-  };
-  recognition.onerror = (e)=>{
-    listening = false;
-    micBtn.classList.remove('listening');
-    setEmotion('confused');
-    const code = e && e.error ? e.error : 'unknown';
-    console.warn('Speech recognition error:', code);
-    const messages = {
-      'not-allowed':'Microphone permission was blocked. Allow microphone access for this site.',
-      'service-not-allowed':'Speech recognition service is unavailable in this browser.',
-      'no-speech':'I didn’t hear speech. Tap the mic and speak again.',
-      'audio-capture':'The microphone could not be opened.',
-      'network':'Speech recognition needs a network connection.'
-    };
-    setListenCaption(messages[code] || ('Voice error: ' + code), true);
-    hideListenCaption(5000);
-  };
-}
-micBtn.addEventListener('click', async ()=>{
-  lastInteraction = Date.now();
-
-  if(!recognition){
-    await startMicrophone();
-    setListenCaption('Voice recognition is not supported here. Try Chrome on Android.', true);
-    hideListenCaption(5000);
-    return;
-  }
-
-  // Explicitly obtain microphone permission before starting recognition.
-  if(!micStream){
-    const ok = await startMicrophone();
-    if(!ok){
-      setEmotion('confused');
-      say("I need microphone permission to hear you.");
-      return;
-    }
-    const cameraOK = !!cameraStream;
-    setMediaState(cameraOK, true);
-  }
-
-  if(listening){
-    recognition.stop();
-    return;
-  }
-
-  try{
-    recognition.start();
-  }catch(e){
-    console.warn('Speech recognition start:', e);
-  }
-});
-
-/* ---------------- ESP32 control via Web Bluetooth ----------------
-   Fill in SERVICE_UUID / CHAR_UUID to match your ESP32 GATT server.
-   The ESP32 should expose a writable characteristic that accepts
-   single-byte commands: 'F','B','L','R','S' (fwd/back/left/right/stop). */
-const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; // placeholder — match your firmware
-const CHAR_UUID    = '0000ffe1-0000-1000-8000-00805f9b34fb'; // placeholder — match your firmware
-let bleDevice = null, bleChar = null;
-
-document.getElementById('connectBtn').addEventListener('click', async ()=>{
-  if(!navigator.bluetooth){ say("Web Bluetooth isn't available — use Chrome on Android."); return; }
-  try{
-    bleDevice = await navigator.bluetooth.requestDevice({
-      filters: [{ services: [SERVICE_UUID] }],
-      optionalServices: [SERVICE_UUID]
-    });
-    const server = await bleDevice.gatt.connect();
-    const service = await server.getPrimaryService(SERVICE_UUID);
-    bleChar = await service.getCharacteristic(CHAR_UUID);
-    setConnState(true);
-    say("Connected to my body!");
-  }catch(err){
-    console.warn(err);
-    setConnState(false);
-  }
-});
-function setConnState(on){
-  document.getElementById('connDot').classList.toggle('off', !on);
-  document.getElementById('connLabel').textContent = on ? 'ONLINE' : 'OFFLINE';
-}
-async function sendCmd(cmd){
-  lastInteraction = Date.now();
-  if(bleChar){
-    try{ await bleChar.writeValue(new TextEncoder().encode(cmd)); }catch(e){ console.warn(e); }
-  }
-  if(cmd==='S') setEmotion('neutral'); else setEmotion('curious');
-}
-document.querySelectorAll('.dpad button').forEach(b=>{
-  b.addEventListener('click', ()=> sendCmd(b.dataset.cmd));
-});
-
-
-/* ---------------- Media diagnostics ---------------- */
-if(location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1'){
-  console.warn('Robo media access requires HTTPS (or localhost). Current protocol:', location.protocol);
-}
-
-/* ---------------- Boot ---------------- */
-applyOrientation();
-requestAnimationFrame(loop);
-
-/*
-  Camera + microphone permissions are requested from a user gesture.
-  This is more reliable on Android browsers than requesting media during
-  page load, and avoids silently failing when the browser blocks autoplay/
-  permission prompts.
-*/
-document.getElementById('camPopup').addEventListener('click', requestMediaAccess);
-document.getElementById('camVideo').addEventListener('click', requestMediaAccess);
-
-/* First tap anywhere on the face also offers media access if not ready. */
-let mediaRequested = false;
-document.getElementById('faceWrap').addEventListener('click', async ()=>{
-  if(mediaRequested) return;
-  mediaRequested = true;
-  await requestMediaAccess();
-});
-setTimeout(()=> document.getElementById('hint').style.opacity=0, 6000);
-</script>
-</body>
-</html>
-    box-shadow: 0 6px 16px rgba(217,103,63,0.45), inset 0 1px 1px rgba(255,255,255,0.5);
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
-  }
-  #micBtn svg{width:26px; height:26px;}
-  #micBtn.listening{animation:mic-glow 1s ease-in-out infinite;}
-  @keyframes mic-glow{0%,100%{box-shadow:0 6px 16px rgba(217,103,63,0.45), 0 0 0 0 rgba(255,123,84,0.5);}50%{box-shadow:0 6px 16px rgba(217,103,63,0.45), 0 0 0 14px rgba(255,123,84,0);}}
-  .portrait #micBtn{ bottom:22px; left:50%; transform:translateX(-50%); }
-  .landscape #micBtn{ bottom:18px; right:130px; }
-
-  /* ---------- D-pad (robot controls) ---------- */
-  .dpad{position:absolute; z-index:20; display:grid; grid-template-columns:repeat(3,40px); grid-template-rows:repeat(3,40px); gap:4px;}
-  .portrait .dpad{ display:none; }
-  .landscape .dpad{ bottom:16px; right:14px; }
-  .dpad button{
-    border:none; border-radius:10px; background:rgba(44,36,64,0.08); color:var(--ink);
-    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px;
-    transition:background .15s ease, transform .1s ease;
-  }
-  .dpad button:active{ background:var(--mint); color:#fff; transform:scale(0.94); }
-  .dpad .up{grid-column:2; grid-row:1;}
-  .dpad .left{grid-column:1; grid-row:2;}
-  .dpad .stop{grid-column:2; grid-row:2; background:rgba(232,89,92,0.12); color:var(--danger);}
-  .dpad .right{grid-column:3; grid-row:2;}
-  .dpad .down{grid-column:2; grid-row:3;}
-
-  /* ---------- Emotion picker (debug / manual override) ---------- */
-  .emotion-row{position:absolute; z-index:20; display:flex; gap:6px;}
-  .portrait .emotion-row{ top:52px; left:16px; flex-direction:column; }
-  .landscape .emotion-row{ top:12px; left:50%; transform:translateX(-50%); }
-  .emotion-row button{
-    width:10px; height:10px; border-radius:50%; border:none; background:rgba(44,36,64,0.25); cursor:pointer; padding:0;
-  }
-  .emotion-row button.active{ background:var(--mint-dim); transform:scale(1.3); }
-
-  /* ---------- Connect button ---------- */
-  #connectBtn{
-    position:absolute; z-index:20; top:8px; right:14px; font-family:'JetBrains Mono',monospace; font-size:10px;
-    background:rgba(44,36,64,0.08); border:none; color:var(--ink); padding:5px 10px; border-radius:20px; cursor:pointer;
-    letter-spacing:.02em;
-  }
-  .landscape #connectBtn{ top:8px; right:14px; }
-
-  /* ---------- Toast / speech bubble ---------- */
-  #speechBubble{
-    position:absolute; z-index:25; max-width:70%; background:#fff; color:var(--ink); padding:10px 14px;
-    border-radius:16px; font-size:13px; font-weight:500; box-shadow:0 8px 20px rgba(0,0,0,0.15);
-    opacity:0; transform:translateY(6px) scale(.98); transition:opacity .25s ease, transform .25s ease; pointer-events:none;
-  }
-  #speechBubble.show{opacity:1; transform:translateY(0) scale(1);}
-  .portrait #speechBubble{ bottom:100px; left:50%; transform:translateX(-50%) translateY(6px); }
-  .portrait #speechBubble.show{ transform:translateX(-50%) translateY(0); }
-  .landscape #speechBubble{ bottom:90px; right:16px; }
-
-  .listen-caption{
-    position:absolute; z-index:24; left:50%; bottom:96px; transform:translateX(-50%);
-    width:min(86%,520px); min-height:34px; padding:8px 14px;
-    border-radius:18px; background:rgba(44,36,64,0.82); color:#fff;
-    font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.35;
-    text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.18);
-    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    opacity:0; transition:opacity .18s ease, transform .18s ease;
-    pointer-events:none; overflow:hidden;
-  }
-  .listen-caption.show{opacity:1; transform:translateX(-50%) translateY(-2px);}
-  .listen-caption .prefix{opacity:.65; margin-right:5px;}
-  .landscape .listen-caption{left:16px; right:16px; bottom:86px; width:auto; transform:none;}
-  .landscape .listen-caption.show{transform:translateY(-2px);}
-  .version-badge{
-    position:absolute; z-index:31; left:14px; bottom:8px; padding:3px 7px;
-    border-radius:9px; background:rgba(44,36,64,.08); color:rgba(44,36,64,.55);
-    font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:.04em;
-    pointer-events:none;
-  }
-  .hint{position:absolute; z-index:30; inset:auto 0 0 0; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(255,255,255,0.3); padding-bottom:2px; pointer-events:none;}
-</style>
-</head>
-<body>
-<div id="app" class="portrait">
-  <div class="bezel">
-    <div class="cam-notch"></div>
-    <div class="screen">
-      <div class="statusbar">
-        <div class="status-top">
-          <div class="brand-label">ROBO <span>v1.0</span></div>
-          <div class="emotion-status" id="emotionLabel">CURIOUS</div>
-          <div class="battery-status"><span id="battLabel">82%</span></div>
-        </div>
-        <div class="status-bottom">
-          <div class="status-pill" id="mediaStatus">
-            <span class="dot off" id="mediaDot"></span>
-            <span id="mediaLabel">MEDIA OFF</span>
-          </div>
-          <div class="status-pill" id="connStatus">
-            <span class="dot off" id="connDot"></span>
-            <span id="connLabel">ROBOT OFFLINE</span>
-          </div>
-        </div>
-      </div>
-
-      <div id="faceWrap">
-        <div class="face-name">ROBO</div>
-        <canvas id="face" width="600" height="600"></canvas>
-      </div>
-
-      <div class="cam-popup" id="camPopup">
-        <video id="camVideo" autoplay playsinline muted></video>
-        <div class="cam-dot"></div>
-        <div class="cam-tag">what I see</div>
-      </div>
-
-      <div class="emotion-row" id="emotionRow"></div>
-
-      <div id="speechBubble"></div>
-
-      <button id="connectBtn">connect robot</button>
-
-      <div class="dpad">
-        <button class="up" data-cmd="F">▲</button>
-        <button class="left" data-cmd="L">◀</button>
-        <button class="stop" data-cmd="S">■</button>
-        <button class="right" data-cmd="R">▶</button>
-        <button class="down" data-cmd="B">▼</button>
-      </div>
-
-      <button id="micBtn" aria-label="talk to Robo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff5ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-          <line x1="12" y1="19" x2="12" y2="23"></line>
-        </svg>
-      </button>
-    </div>
-    <div class="listen-caption" id="listenCaption" aria-live="polite">
-      <span class="prefix">ROBO HEARS:</span><span id="listenText">Tap the mic and speak…</span>
-    </div>
-  </div>
-  <div class="version-badge">ROBO • VERSION 1.0</div>
-  <div class="hint" id="hint">tap the mic to talk • camera preview shows what Robo sees</div>
-</div>
-
-<script>
-/* =========================================================
-   ROBO — companion face
-   - Canvas face renderer w/ emotion states, blink, idle motion
-   - Orientation-aware layout (portrait / landscape)
-   - Camera popup ("what the AI sees")
-   - Placeholder voice loop: Web Speech STT -> tiny rule-based
-     brain -> Web Speech TTS (swap runBrain() for a real API later)
-   - ESP32 control scaffold via Web Bluetooth (BLE)
-   ========================================================= */
-
-/* ---------------- Emotion engine ---------------- */
-const EMOTIONS = ["neutral","happy","curious","sleepy","startled","confused","listening","thinking"];
-let currentEmotion = "curious";
-let targetEmotion = "curious";
-let blend = 1; // 0..1 interpolation between previous and target
-let lastInteraction = Date.now();
-
-const emotionRow = document.getElementById('emotionRow');
-EMOTIONS.filter(e=>!["listening","thinking"].includes(e)).forEach(e=>{
-  const b = document.createElement('button');
-  b.title = e;
-  b.addEventListener('click', ()=> setEmotion(e, true));
-  emotionRow.appendChild(b);
-});
-function refreshEmotionDots(){
-  [...emotionRow.children].forEach((el,i)=>{
-    const e = EMOTIONS.filter(x=>!["listening","thinking"].includes(x))[i];
-    el.classList.toggle('active', e === currentEmotion);
-  });
-}
-function setEmotion(e, manual){
-  if(e === targetEmotion) return;
-  targetEmotion = e; blend = 0;
-  document.getElementById('emotionLabel').textContent = e;
-  if(manual) lastInteraction = Date.now();
-}
-
-/* idle behaviour: Robo gets curious / sleepy on its own so it feels alive */
-setInterval(()=>{
-  const idle = Date.now() - lastInteraction;
-  if(idle > 30000 && Math.random() < 0.38) setEmotion("sleepy");
-  else if(idle > 12000 && Math.random() < 0.30){
-    const choices = ["curious","neutral","happy"];
-    setEmotion(choices[Math.floor(Math.random()*choices.length)]);
-  }
-}, 4200);
-
-/* ---------------- Canvas face renderer ---------------- */
-const canvas = document.getElementById('face');
-const ctx = canvas.getContext('2d');
-let dpr = Math.min(window.devicePixelRatio||1, 2);
-
-function sizeCanvas(){
-  const wrap = document.getElementById('faceWrap');
-  const s = Math.min(wrap.clientWidth, wrap.clientHeight) * 0.88;
-  canvas.style.width = s+'px'; canvas.style.height = s+'px';
-  canvas.width = s*dpr; canvas.height = s*dpr;
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-}
-window.addEventListener('resize', sizeCanvas);
-
-let t = 0;
-let blinkTimer = randRange(2200, 5200);
-let blinkProgress = 0; // 0 open .. 1 closed
-let eyeTarget = {x:0,y:0};
-let eyePos = {x:0,y:0};
-let nextSaccade = randRange(1500,3500);
-
-function randRange(a,b){ return a + Math.random()*(b-a); }
-
-function scheduleSaccade(){
-  nextSaccade = randRange(1400, 3800);
-  eyeTarget = { x: randRange(-1,1), y: randRange(-0.6,0.6) };
-}
-
-function draw(dt){
-  const s = canvas.width/dpr;
-  ctx.clearRect(0,0,s,s);
-
-  const cx = s/2, cy = s/2;
-  const ink = getComputedStyle(document.documentElement).getPropertyValue('--face').trim();
-
-  // Soft breathing makes Robo feel alive.
-  const breathe = 1 + Math.sin(t*1.25)*0.008;
-  const bob = Math.sin(t*0.9)*s*0.006;
-
-  // Blink.
-  blinkTimer -= dt;
-  if(blinkTimer <= 0){
-    blinkProgress = 0.0001;
-    blinkTimer = randRange(2600, 6200);
-  }
-  if(blinkProgress > 0){
-    blinkProgress += dt/105;
-    if(blinkProgress >= 1.9) blinkProgress = 0;
-  }
-  const blinkAmt = blinkProgress > 0
-    ? Math.sin(Math.min(blinkProgress,1)*Math.PI)
-    : 0;
-
-  // Eye saccades.
-  nextSaccade -= dt;
-  if(nextSaccade <= 0) scheduleSaccade();
-  eyePos.x += (eyeTarget.x-eyePos.x)*0.075;
-  eyePos.y += (eyeTarget.y-eyePos.y)*0.075;
-
-  // Emotion interpolation.
-  blend = Math.min(1, blend + dt/240);
-  if(blend >= 1) currentEmotion = targetEmotion;
-  refreshEmotionDots();
-
-  const from = shapeFor(currentEmotion,t);
-  const to = shapeFor(targetEmotion,t);
-  const k = easeInOut(blend);
-
-  const eyeH = lerp(from.eyeH,to.eyeH,k) * (1-blinkAmt*0.98);
-  const eyeW = lerp(from.eyeW,to.eyeW,k);
-  const browAngle = lerp(from.brow,to.brow,k);
-  const browY = lerp(from.browY,to.browY,k);
-  const mouth = lerpMouth(from.mouth,to.mouth,k);
-  const wander = lerp(from.wander,to.wander,k);
-  const cheek = lerp(from.cheek||0,to.cheek||0,k);
-  const glow = lerp(from.glow||0,to.glow||0,k);
-  const tilt = lerp(from.tilt,to.tilt,k);
-
-  const eyeOffsetX = eyePos.x*s*0.026*wander;
-  const eyeOffsetY = eyePos.y*s*0.018*wander;
-
-  ctx.save();
-  ctx.translate(cx,cy+bob);
-  ctx.scale(breathe,breathe);
-  ctx.rotate(tilt*0.55);
-  ctx.translate(-cx,-cy);
-
-  // Ambient glow around the character.
-  if(glow > 0.01){
-    const aura = ctx.createRadialGradient(cx,cy+s*.03,s*.08,cx,cy+s*.03,s*.43);
-    aura.addColorStop(0, `rgba(255,123,84,${glow*.10})`);
-    aura.addColorStop(.55, `rgba(255,180,120,${glow*.055})`);
-    aura.addColorStop(1, 'rgba(255,180,120,0)');
-    ctx.fillStyle = aura;
-    ctx.beginPath();
-    ctx.arc(cx,cy+s*.03,s*.44,0,Math.PI*2);
-    ctx.fill();
-  }
-
-  // Floating sparkles / particles.
-  for(let i=0;i<5;i++){
-    const a = t*(0.18+i*0.025)+i*1.25;
-    const rx = s*(0.34+0.018*Math.sin(i));
-    const ry = s*(0.30+0.012*i);
-    const sx = cx + Math.cos(a)*rx;
-    const sy = cy + Math.sin(a*1.15)*ry;
-    const alpha = 0.14 + 0.10*(0.5+0.5*Math.sin(t*1.4+i));
-    ctx.fillStyle = `rgba(255,123,84,${alpha})`;
-    ctx.beginPath();
-    ctx.arc(sx,sy,s*(0.006+0.002*(i%2)),0,Math.PI*2);
-    ctx.fill();
-  }
-
-  // Cute antenna.
-  const antennaY = cy-s*.31;
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = s*.012;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(cx,cy-s*.245);
-  ctx.quadraticCurveTo(cx-s*.01,cy-s*.285,cx,antennaY);
-  ctx.stroke();
-
-  const pulse = 1 + Math.sin(t*2.8)*.10;
-  const orbR = s*.032*pulse;
-  const orbGlow = ctx.createRadialGradient(cx,antennaY,0,cx,antennaY,s*.075);
-  orbGlow.addColorStop(0,'rgba(255,123,84,.75)');
-  orbGlow.addColorStop(1,'rgba(255,123,84,0)');
-  ctx.fillStyle = orbGlow;
-  ctx.beginPath();
-  ctx.arc(cx,antennaY,s*.075,0,Math.PI*2);
-  ctx.fill();
-
-  ctx.fillStyle = '#ff7b54';
-  ctx.beginPath();
-  ctx.arc(cx,antennaY,orbR,0,Math.PI*2);
-  ctx.fill();
-
-  // Rounded robot head / shell.
-  const headW = s*.67;
-  const headH = s*.53;
-  const headX = cx-headW/2;
-  const headY = cy-s*.22;
-
-  // Outer glow.
-  ctx.shadowColor = 'rgba(255,123,84,.22)';
-  ctx.shadowBlur = s*.035;
-  const shell = ctx.createLinearGradient(headX,headY,headX+headW,headY+headH);
-  shell.addColorStop(0,'#fff8ef');
-  shell.addColorStop(.52,'#ffe6cf');
-  shell.addColorStop(1,'#ffd2ad');
-
-  ctx.fillStyle = shell;
-  roundRect(ctx,headX,headY,headW,headH,s*.105);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // Side ear/pad details.
-  ctx.fillStyle = '#f4c39d';
-  roundRect(ctx,headX-s*.038,cy-s*.075,s*.052,s*.15,s*.025); ctx.fill();
-  roundRect(ctx,headX+headW-s*.014,cy-s*.075,s*.052,s*.15,s*.025); ctx.fill();
-
-  // Inner face panel.
-  const panelX = headX+s*.045;
-  const panelY = headY+s*.045;
-  const panelW = headW-s*.09;
-  const panelH = headH-s*.09;
-
-  const panel = ctx.createLinearGradient(panelX,panelY,panelX,panelY+panelH);
-  panel.addColorStop(0,'#493b59');
-  panel.addColorStop(1,'#28213a');
-  ctx.fillStyle = panel;
-  roundRect(ctx,panelX,panelY,panelW,panelH,s*.075);
-  ctx.fill();
-
-  // Little top shine on the shell.
-  ctx.fillStyle = 'rgba(255,255,255,.34)';
-  roundRect(ctx,headX+s*.10,headY+s*.035,s*.20,s*.012,s*.006);
-  ctx.fill();
-
-  const eyeGap = s*.185;
-  const eyeY = cy-s*.045;
-  const eyeR = s*.087;
-
-  [-1,1].forEach(side=>{
-    const ex = cx+side*eyeGap+eyeOffsetX;
-    const ey = eyeY+eyeOffsetY;
-    const w = eyeR*eyeW;
-    const h = Math.max(eyeR*eyeH,eyeR*.035);
-
-    // Expressive brow.
-    ctx.save();
-    ctx.strokeStyle = '#fff6ee';
-    ctx.globalAlpha = .92;
-    ctx.lineWidth = s*.015;
-    ctx.lineCap = 'round';
-    ctx.translate(ex,ey-eyeR*1.55+browY*s*.05);
-    ctx.rotate(side*browAngle);
-    ctx.beginPath();
-    ctx.moveTo(-eyeR*.55,0);
-    ctx.quadraticCurveTo(0,-s*.006,eyeR*.55,0);
-    ctx.stroke();
-    ctx.restore();
-
-    // Eye white / luminous sclera.
-    ctx.fillStyle = '#fffaf5';
-    ctx.beginPath();
-    ctx.ellipse(ex,ey,w,h,0,0,Math.PI*2);
-    ctx.fill();
-
-    if(h > eyeR*.12 && blinkAmt < .88){
-      // Iris.
-      const ix = ex + eyePos.x*w*.15;
-      const iy = ey + eyePos.y*h*.12;
-      const irisR = Math.min(w,h)*.70;
-
-      const iris = ctx.createRadialGradient(
-        ix-irisR*.25,iy-irisR*.35,irisR*.08,
-        ix,iy,irisR
-      );
-      iris.addColorStop(0,'#c9f7ff');
-      iris.addColorStop(.35,'#75bff0');
-      iris.addColorStop(.72,'#7d69d9');
-      iris.addColorStop(1,'#30234f');
-
-      ctx.fillStyle = iris;
-      ctx.beginPath();
-      ctx.arc(ix,iy,irisR,0,Math.PI*2);
-      ctx.fill();
-
-      // Pupils.
-      ctx.fillStyle = '#161126';
-      ctx.beginPath();
-      ctx.ellipse(ix,iy,irisR*.38,irisR*.55,0,0,Math.PI*2);
-      ctx.fill();
-
-      // Two cute catchlights.
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(ix-irisR*.34,iy-irisR*.34,irisR*.19,0,Math.PI*2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(ix+irisR*.30,iy-irisR*.02,irisR*.08,0,Math.PI*2);
-      ctx.fill();
-    }
-
-    // Upper eyelid accent.
-    if(blinkAmt > .03 || from.lid > .15 || to.lid > .15){
-      const lid = Math.max(from.lid||0,to.lid||0,blinkAmt);
-      ctx.strokeStyle = `rgba(255,246,238,${Math.min(.9,lid)})`;
-      ctx.lineWidth = s*.012;
-      ctx.beginPath();
-      ctx.ellipse(ex,ey,w*.98,h*.90,0,Math.PI*1.05,Math.PI*1.95);
-      ctx.stroke();
-    }
-
-    // Blush.
-    if(cheek > .02){
-      const bx = ex+side*s*.08;
-      const by = cy+s*.095;
-      const blush = ctx.createRadialGradient(bx,by,0,bx,by,s*.075);
-      blush.addColorStop(0,`rgba(255,123,84,${Math.min(.45,cheek*.4)})`);
-      blush.addColorStop(1,'rgba(255,123,84,0)');
-      ctx.fillStyle = blush;
-      ctx.beginPath();
-      ctx.arc(bx,by,s*.075,0,Math.PI*2);
-      ctx.fill();
-
-      // Tiny blush marks.
-      ctx.strokeStyle = `rgba(255,180,150,${Math.min(.75,cheek*.75)})`;
-      ctx.lineWidth = s*.007;
-      ctx.lineCap = 'round';
-      for(let j=0;j<3;j++){
-        const dx = bx-side*s*.035+j*side*s*.024;
-        ctx.beginPath();
-        ctx.moveTo(dx-s*.008,by-s*.006);
-        ctx.lineTo(dx+s*.002,by+s*.004);
-        ctx.stroke();
-      }
-    }
-  });
-
-  // Tiny nose dot.
-  ctx.fillStyle = 'rgba(255,246,238,.42)';
-  ctx.beginPath();
-  ctx.arc(cx,cy+s*.075,s*.009,0,Math.PI*2);
-  ctx.fill();
-
-  // Cute mouth.
-  ctx.save();
-  ctx.translate(cx,cy+s*.145);
-  const mw = s*mouth.w;
-  const mc = s*mouth.curve;
-  const mo = s*mouth.open;
-
-  ctx.strokeStyle = '#fff6ee';
-  ctx.lineWidth = s*.018;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  if(currentEmotion === 'happy' || targetEmotion === 'happy'){
-    // Small kawaii open smile.
-    ctx.fillStyle = '#fff6ee';
-    ctx.beginPath();
-    ctx.moveTo(-mw*.42,0);
-    ctx.quadraticCurveTo(0,mc*1.55,mw*.42,0);
-    ctx.quadraticCurveTo(0,mc*.92,-mw*.42,0);
-    ctx.fill();
-
-    ctx.fillStyle = '#ff8e76';
-    ctx.beginPath();
-    ctx.ellipse(0,mc*.75,mw*.18,Math.max(s*.008,mo*.55),0,0,Math.PI*2);
-    ctx.fill();
-  }else{
-    ctx.beginPath();
-    ctx.moveTo(-mw/2,0);
-    ctx.quadraticCurveTo(-mw*.18,mc*.65,0,mc);
-    ctx.quadraticCurveTo(mw*.18,mc*.65,mw/2,0);
-    ctx.stroke();
-
-    if(mo > .004){
-      ctx.fillStyle = '#fff6ee';
-      ctx.beginPath();
-      ctx.ellipse(0,mc*.42,mw*.23,mo,0,0,Math.PI*2);
-      ctx.fill();
-    }
-  }
-
-  ctx.restore();
-
-  // Tiny floating heart when happy.
-  if(currentEmotion === 'happy' || targetEmotion === 'happy'){
-    const hx = cx+s*.27;
-    const hy = cy-s*.22+Math.sin(t*1.8)*s*.012;
-    const hs = s*.025;
-    ctx.fillStyle = 'rgba(255,123,84,.82)';
-    ctx.beginPath();
-    ctx.moveTo(hx,hy+hs);
-    ctx.bezierCurveTo(hx-hs*1.7,hy-hs*.1,hx-hs,hy-hs*1.45,hx,hy-hs*.65);
-    ctx.bezierCurveTo(hx+hs,hy-hs*1.45,hx+hs*1.7,hy-hs*.1,hx,hy+hs);
-    ctx.fill();
-  }
-
-  ctx.restore();
-}
-
-function roundRect(ctx,x,y,w,h,r){
-  const rr = Math.min(r,w/2,h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+rr,y);
-  ctx.arcTo(x+w,y,x+w,y+h,rr);
-  ctx.arcTo(x+w,y+h,x,y+h,rr);
-  ctx.arcTo(x,y+h,x,y,rr);
-  ctx.arcTo(x,y,x+w,y,rr);
-  ctx.closePath();
-}
-
-function lerp(a,b,k){ return a+(b-a)*k; }
-function lerpMouth(a,b,k){
-  return {
-    w:lerp(a.w,b.w,k),
-    curve:lerp(a.curve,b.curve,k),
-    open:lerp(a.open,b.open,k)
-  };
-}
-function easeInOut(x){ return x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2; }
-
-function shapeFor(e,t){
-  switch(e){
-    case "happy": return {
-      eyeH:.72,eyeW:1.05,brow:.02,browY:-.38,tilt:0,wander:.5,
-      cheek:1,glow:1,lid:.05,mouth:{w:.34,curve:.10,open:.035}
-    };
-    case "curious": return {
-      eyeH:1.12,eyeW:.94,brow:.16,browY:-.72,tilt:.055,wander:1,
-      cheek:.05,glow:.55,lid:.02,mouth:{w:.25,curve:.035,open:.008}
-    };
-    case "sleepy": return {
-      eyeH:.22,eyeW:1.02,brow:-.02,browY:.08,tilt:-.02,wander:.12,
-      cheek:0,glow:.12,lid:.65,mouth:{w:.25,curve:.018,open:.008}
-    };
-    case "startled": return {
-      eyeH:1.52,eyeW:1.18,brow:0,browY:-1.02,tilt:0,wander:.72,
-      cheek:0,glow:1.1,lid:0,mouth:{w:.24,curve:-.025,open:.08}
-    };
-    case "confused": return {
-      eyeH:.98,eyeW:.88,brow:.24,browY:-.44,tilt:.11,wander:.65,
-      cheek:.05,glow:.6,lid:.08,mouth:{w:.29,curve:-.065,open:.01}
-    };
-    case "listening": return {
-      eyeH:1.07,eyeW:1.01,brow:.05,browY:-.48,tilt:0,wander:.25,
-      cheek:.30,glow:.8,lid:.02,mouth:{w:.24,curve:.025,open:.018}
-    };
-    case "thinking": return {
-      eyeH:.58,eyeW:.91,brow:.12,browY:-.22,tilt:.075,wander:.08,
-      cheek:0,glow:.72,lid:.12,mouth:{w:.22,curve:-.035,open:.006}
-    };
-    default: return {
-      eyeH:.86,eyeW:1.02,brow:0,browY:-.22,tilt:0,wander:.62,
-      cheek:.10,glow:.32,lid:.02,mouth:{w:.27,curve:.055,open:0}
-    };
-  }
-}
-
-let lastFrame = performance.now();
-function loop(now){
-  const dt = now - lastFrame; lastFrame = now; t += dt/1000;
-  draw(dt);
-  requestAnimationFrame(loop);
-}
-
-/* ---------------- Orientation handling ---------------- */
-const app = document.getElementById('app');
-function applyOrientation(){
-  const portrait = window.matchMedia("(orientation: portrait)").matches;
-  app.classList.toggle('portrait', portrait);
-  app.classList.toggle('landscape', !portrait);
-  sizeCanvas();
-}
-window.matchMedia("(orientation: portrait)").addEventListener('change', applyOrientation);
-window.addEventListener('resize', applyOrientation);
-
-/* ---------------- Camera popup ("what I see") ---------------- */
-let cameraStream = null;
-let micStream = null;
-
-function showMediaError(type, err){
-  const popup = document.getElementById('camPopup');
-  const msg = type === 'camera'
-    ? 'camera unavailable — use HTTPS and allow camera access'
-    : 'microphone unavailable — allow microphone access';
-  console.warn(type + ' error:', err);
-  if(type === 'camera'){
-    popup.innerHTML = '<div style="color:#fff;font-family:JetBrains Mono,monospace;font-size:9px;padding:8px;">'+msg+'</div>';
-  }
-}
-
-async function startCamera(){
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    showMediaError('camera', new Error('getUserMedia unavailable'));
-    return false;
-  }
-
-  try{
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video:{
-        facingMode:{ideal:'user'},
-        width:{ideal:1280},
-        height:{ideal:720},
-        frameRate:{ideal:30,max:30}
-      },
-      audio:false
-    });
-
-    const video = document.getElementById('camVideo');
-    video.srcObject = cameraStream;
-    await video.play().catch(()=>{});
-    return true;
-  }catch(err){
-    showMediaError('camera', err);
-    return false;
-  }
-}
-
-async function startMicrophone(){
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    showMediaError('microphone', new Error('getUserMedia unavailable'));
-    return false;
-  }
-
-  try{
-    micStream = await navigator.mediaDevices.getUserMedia({
-      audio:{
-        echoCancellation:true,
-        noiseSuppression:true,
-        autoGainControl:true,
-        channelCount:1
-      },
-      video:false
-    });
-    console.log('Microphone stream ready:', micStream);
-    return true;
-  }catch(err){
-    showMediaError('microphone', err);
-    return false;
-  }
-}
-
-function setMediaState(cameraOK, micOK){
-  const dot = document.getElementById('mediaDot');
-  const label = document.getElementById('mediaLabel');
-  const ready = cameraOK && micOK;
-  dot.classList.toggle('off', !ready);
-  label.textContent = ready ? 'CAM + MIC OK' :
-    cameraOK ? 'CAM OK • MIC OFF' :
-    micOK ? 'MIC OK • CAM OFF' : 'MEDIA OFF';
-}
-
-async function requestMediaAccess(){
-  // Request camera first, then microphone so Android shows clear permissions.
-  const cameraOK = await startCamera();
-  const micOK = await startMicrophone();
-
-  setMediaState(cameraOK, micOK);
-
-  if(cameraOK || micOK){
-    say(cameraOK && micOK
-      ? 'Camera and microphone are ready.'
-      : cameraOK
-        ? 'Camera is ready. Microphone permission is still needed.'
-        : 'Microphone is ready. Camera permission is still needed.');
-  }
-}
-
-/* ---------------- Live listening captions ---------------- */
-const listenCaption = document.getElementById('listenCaption');
-const listenText = document.getElementById('listenText');
-let captionTimer = null;
-
-function setListenCaption(text, visible=true){
-  listenText.textContent = text || 'Listening…';
-  listenCaption.classList.toggle('show', visible);
-}
-
-function hideListenCaption(delay=1200){
-  clearTimeout(captionTimer);
-  captionTimer = setTimeout(()=>listenCaption.classList.remove('show'), delay);
-}
-
-/* ---------------- Speech bubble ---------------- */
-const bubble = document.getElementById('speechBubble');
-let bubbleTimeout;
-function say(text){
-  bubble.textContent = text;
-  bubble.classList.add('show');
-  clearTimeout(bubbleTimeout);
-  bubbleTimeout = setTimeout(()=> bubble.classList.remove('show'), 3400);
-
-  if('speechSynthesis' in window){
-    const u = new SpeechSynthesisUtterance(text);
-    u.pitch = 1.3;
-    u.rate = 1.02;
-
-    u.onstart = ()=> setEmotion('happy');
-    u.onend = ()=> setEmotion('curious');
-
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
   }
 }
 
