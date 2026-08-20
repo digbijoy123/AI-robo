@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Robo v1.0 — AI Companion</title>
+<title>Robo AIOS — Companion v1.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -123,6 +123,79 @@
 
   .version-badge{position:absolute;z-index:31;left:50%;bottom:5px;transform:translateX(-50%);padding:3px 7px;border-radius:9px;background:rgba(44,36,64,.07);color:rgba(44,36,64,.42);font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.08em;pointer-events:none;}
   .hint{position:absolute; z-index:30; inset:auto 0 2px 0; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(255,255,255,0.3); padding-bottom:2px; pointer-events:none;}
+
+  /* =========================================================
+     V1.1 DEV HUD — inspired by the supplied Jarvis reference.
+     Robo's existing canvas/3D avatar is preserved.
+     ========================================================= */
+  .dev-hud{
+    position:absolute;left:50%;top:10px;transform:translateX(-50%);
+    z-index:40;text-align:center;pointer-events:none;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.16em;
+    text-transform:uppercase;color:rgba(44,36,64,.52);font-size:7px;
+  }
+  .dev-hud strong{display:block;color:var(--mint-dim);font-size:9px;letter-spacing:.22em;margin-bottom:2px;}
+  .dev-hud span{opacity:.72;}
+  .dev-orientation{
+    position:absolute;right:12px;top:58px;z-index:41;
+    border:1px solid rgba(44,36,64,.14);background:rgba(255,255,255,.34);
+    color:var(--ink);border-radius:12px;padding:7px 9px;
+    font:600 7px 'JetBrains Mono',monospace;letter-spacing:.08em;
+    text-transform:uppercase;cursor:pointer;backdrop-filter:blur(8px);
+    box-shadow:0 5px 14px rgba(44,36,64,.07);pointer-events:auto;
+  }
+  .dev-orientation:active{transform:scale(.96);}
+  .dev-orientation .mode-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--mint);margin-right:5px;vertical-align:middle;}
+  #faceWrap .orbit-ring{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    border-radius:50%;pointer-events:none;z-index:-1;border:1px solid rgba(44,36,64,.11);
+  }
+  #faceWrap .orbit-outer{width:min(86vw,430px);height:min(86vw,430px);border-style:solid;animation:roboOrbit 36s linear infinite;}
+  #faceWrap .orbit-mid{width:min(73vw,365px);height:min(73vw,365px);border-style:dashed;animation:roboOrbitReverse 22s linear infinite;}
+  #faceWrap .orbit-pulse{width:min(62vw,315px);height:min(62vw,315px);border:2px solid rgba(63,191,174,.24);animation:roboPulse 2.4s ease-out infinite;}
+  #faceWrap .orbit-outer::before,#faceWrap .orbit-outer::after{
+    content:"";position:absolute;width:6px;height:6px;border-radius:50%;
+    background:var(--mint);box-shadow:0 0 10px rgba(63,191,174,.7);left:50%;transform:translateX(-50%);
+  }
+  #faceWrap .orbit-outer::before{top:-3px}
+  #faceWrap .orbit-outer::after{bottom:-3px}
+  @keyframes roboOrbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  @keyframes roboOrbitReverse{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+  @keyframes roboPulse{0%{opacity:.45;transform:translate(-50%,-50%) scale(.92)}70%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.08)}}
+  .telemetry{
+    position:absolute;left:14px;right:14px;bottom:6px;z-index:31;height:24px;
+    border-top:1px solid rgba(44,36,64,.12);display:flex;align-items:flex-end;
+    justify-content:space-between;font:7px 'JetBrains Mono',monospace;
+    color:rgba(44,36,64,.42);text-transform:uppercase;letter-spacing:.08em;pointer-events:none;
+  }
+  .telemetry .live{color:var(--mint-dim)} .telemetry .right{text-align:right}
+  .emotion-row{max-height:126px;overflow:auto;scrollbar-width:none;}
+  .emotion-row::-webkit-scrollbar{display:none;}
+  .emotion-row button{transition:transform .16s,background .16s,box-shadow .16s;}
+  .emotion-row button.active{box-shadow:0 0 0 3px rgba(63,191,174,.12);}
+  #app.state-listening #faceWrap .orbit-outer,#app.state-listening #faceWrap .orbit-mid{border-color:rgba(63,191,174,.38);}
+  #app.state-thinking #faceWrap .orbit-outer,#app.state-thinking #faceWrap .orbit-mid{border-color:rgba(232,163,61,.36);}
+  #app.state-talking #faceWrap .orbit-outer,#app.state-talking #faceWrap .orbit-mid{border-color:rgba(62,140,91,.40);}
+  #app.state-excited #faceWrap .orbit-outer{border-color:rgba(255,123,84,.48);animation-duration:8s;}
+  #app.state-love #faceWrap .orbit-outer{border-color:rgba(232,87,74,.42);}
+  #app.state-angry #faceWrap .orbit-outer{border-color:rgba(232,87,74,.52);animation-duration:5s;}
+  #app.dev-portrait{justify-content:center;}
+  #app.dev-portrait .bezel{width:min(430px,calc(100vw - 20px));height:calc(100vh - 20px);flex:none;}
+  #app.dev-landscape{justify-content:center;}
+  #app.dev-landscape .bezel{width:min(1000px,calc(100vw - 20px));height:min(620px,calc(100vh - 20px));flex:none;}
+  #app.dev-landscape #faceWrap{left:150px;right:150px;top:95px;bottom:115px;}
+  #app.dev-landscape .cam-popup{top:104px;right:14px;width:140px;height:96px;}
+  #app.dev-landscape .emotion-row{top:105px;left:14px;right:auto;bottom:auto;width:30px;}
+  #app.dev-landscape #micBtn{bottom:18px;right:170px;left:auto;transform:none;}
+  #app.dev-landscape .listen-caption{left:160px;right:160px;bottom:18px;}
+  #app.dev-landscape .hint{display:none;}
+  @media(max-width:700px){
+    .dev-hud{top:9px}.dev-orientation{top:57px;right:10px}
+    #faceWrap .orbit-outer{width:min(88vw,390px);height:min(88vw,390px)}
+    #faceWrap .orbit-mid{width:min(75vw,335px);height:min(75vw,335px)}
+    #faceWrap .orbit-pulse{width:min(64vw,285px);height:min(64vw,285px)}
+  }
+
 </style>
 </head>
 <body>
@@ -130,6 +203,11 @@
   <div class="bezel">
     <div class="cam-notch"></div>
     <div class="screen">
+      <div class="dev-hud"><strong>ROBO AIOS</strong><span>local dev interface · v1.1</span></div>
+      <button class="dev-orientation" id="devOrientation" type="button">
+        <span class="mode-dot"></span><span id="orientationText">PORTRAIT TEST</span>
+      </button>
+
       <div class="statusbar">
         <div class="status-top">
           <div class="brand-label">ROBO <span>v1.0</span></div>
@@ -149,7 +227,10 @@
       </div>
 
       <div id="faceWrap">
-        <div class="face-name">ROBO</div>
+        <div class="orbit-ring orbit-outer"></div>
+        <div class="orbit-ring orbit-mid"></div>
+        <div class="orbit-ring orbit-pulse"></div>
+        <div class="face-name">ROBO // AVATAR CORE</div>
         <canvas id="face" width="600" height="600"></canvas>
       </div>
 
@@ -181,6 +262,11 @@
         </svg>
       </button>
 
+      <div class="telemetry">
+        <div><span class="live">● LIVE</span> · FACE CORE · MEDIA <span id="telemetryMedia">OFF</span></div>
+        <div class="right">STATE <span id="telemetryState">CURIOUS</span> · <span id="telemetryMode">PORTRAIT</span></div>
+      </div>
+
       <div class="listen-caption" id="listenCaption" aria-live="polite">
         <span class="prefix">ROBO HEARS</span><span id="listenText">Tap the mic and speak…</span><span class="voice-bars"><i></i><i></i><i></i><i></i><i></i></span>
       </div>
@@ -201,7 +287,7 @@
    ========================================================= */
 
 /* ---------------- Emotion engine ---------------- */
-const EMOTIONS = ["neutral","happy","curious","sleepy","startled","confused","listening","thinking","talking"];
+const EMOTIONS = ["neutral","happy","curious","sleepy","startled","confused","listening","thinking","talking","excited","sad","surprised","love","angry","embarrassed"];
 let currentEmotion = "curious";
 let targetEmotion = "curious";
 let blend = 1; // 0..1 interpolation between previous and target
@@ -223,9 +309,13 @@ function refreshEmotionDots(){
   });
 }
 function setEmotion(e, manual){
-  if(e === targetEmotion) return;
+  if(!EMOTIONS.includes(e)) e = "curious";
+  if(e === targetEmotion && !manual) return;
   targetEmotion = e; blend = 0;
   document.getElementById('emotionLabel').textContent = e;
+  document.getElementById('telemetryState').textContent = e.toUpperCase();
+  const stateClasses = app.className.replace(/state-[a-z]+/g,'').trim();
+  app.className = stateClasses + ' state-' + e;
   if(manual) lastInteraction = Date.now();
 }
 
@@ -577,6 +667,34 @@ function draw(dt){
 
   ctx.restore();
 
+  // Extra expressive accents for the new states.
+  const activeState = targetEmotion;
+  if(activeState === 'love'){
+    for(let i=0;i<3;i++){
+      const hx=cx+(i-1)*s*.13, hy=cy-s*.31+Math.sin(t*2+i)*s*.018, hs=s*.018;
+      ctx.fillStyle='rgba(232,87,74,.82)';
+      ctx.beginPath();
+      ctx.moveTo(hx,hy+hs);
+      ctx.bezierCurveTo(hx-hs*1.7,hy-hs*.1,hx-hs,hy-hs*1.45,hx,hy-hs*.65);
+      ctx.bezierCurveTo(hx+hs,hy-hs*1.45,hx+hs*1.7,hy-hs*.1,hx,hy+hs);
+      ctx.fill();
+    }
+  }
+  if(activeState === 'surprised' || activeState === 'startled'){
+    ctx.strokeStyle='rgba(255,123,84,.48)';ctx.lineWidth=s*.006;
+    for(let i=0;i<8;i++){
+      const a=i*Math.PI/4+t*.2,r1=s*.37,r2=s*.405;
+      ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
+      ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);
+      ctx.stroke();
+    }
+  }
+  if(activeState === 'angry'){
+    ctx.strokeStyle='rgba(232,87,74,.52)';ctx.lineWidth=s*.008;
+    ctx.beginPath();ctx.arc(cx,cy+s*.02,s*.37,-2.75,-.40);ctx.stroke();
+  }
+
   // Tiny floating heart when happy.
   if(currentEmotion === 'happy' || targetEmotion === 'happy'){
     const hx = cx+s*.27;
@@ -648,6 +766,30 @@ function shapeFor(e,t){
       eyeH:.94,eyeW:1.02,brow:.03,browY:-.30,tilt:0,wander:.30,
       cheek:.18,glow:.95,lid:.02,mouth:{w:.29,curve:.055,open:.055}
     };
+    case "excited": return {
+      eyeH:1.32,eyeW:1.10,brow:.02,browY:-.88,tilt:0,wander:.9,
+      cheek:.65,glow:1.25,lid:0,mouth:{w:.34,curve:.11,open:.075}
+    };
+    case "sad": return {
+      eyeH:.78,eyeW:1.00,brow:-.20,browY:.18,tilt:-.035,wander:.18,
+      cheek:.08,glow:.08,lid:.25,mouth:{w:.27,curve:-.075,open:.005}
+    };
+    case "surprised": return {
+      eyeH:1.50,eyeW:1.18,brow:.02,browY:-1.08,tilt:0,wander:.75,
+      cheek:.05,glow:1.0,lid:0,mouth:{w:.25,curve:.01,open:.105}
+    };
+    case "love": return {
+      eyeH:.82,eyeW:1.08,brow:-.02,browY:-.36,tilt:.015,wander:.22,
+      cheek:1.15,glow:1.25,lid:.04,mouth:{w:.31,curve:.095,open:.028}
+    };
+    case "angry": return {
+      eyeH:.70,eyeW:1.02,brow:-.30,browY:.10,tilt:-.025,wander:.45,
+      cheek:0,glow:1.15,lid:.28,mouth:{w:.29,curve:-.10,open:.012}
+    };
+    case "embarrassed": return {
+      eyeH:.66,eyeW:.95,brow:.08,browY:-.05,tilt:.045,wander:.18,
+      cheek:1.2,glow:.72,lid:.18,mouth:{w:.23,curve:.055,open:.006}
+    };
     default: return {
       eyeH:.86,eyeW:1.02,brow:0,browY:-.22,tilt:0,wander:.62,
       cheek:.10,glow:.32,lid:.02,mouth:{w:.27,curve:.055,open:0}
@@ -664,12 +806,22 @@ function loop(now){
 
 /* ---------------- Orientation handling ---------------- */
 const app = document.getElementById('app');
+let devOrientation = 'portrait';
 function applyOrientation(){
-  const portrait = window.matchMedia("(orientation: portrait)").matches;
+  const nativePortrait = window.matchMedia("(orientation: portrait)").matches;
+  const portrait = devOrientation ? devOrientation === 'portrait' : nativePortrait;
   app.classList.toggle('portrait', portrait);
   app.classList.toggle('landscape', !portrait);
+  app.classList.toggle('dev-portrait', devOrientation === 'portrait');
+  app.classList.toggle('dev-landscape', devOrientation === 'landscape');
+  document.getElementById('orientationText').textContent = portrait ? 'PORTRAIT TEST' : 'LANDSCAPE TEST';
+  document.getElementById('telemetryMode').textContent = portrait ? 'PORTRAIT' : 'LANDSCAPE';
   sizeCanvas();
 }
+document.getElementById('devOrientation').addEventListener('click', ()=>{
+  devOrientation = devOrientation === 'portrait' ? 'landscape' : 'portrait';
+  applyOrientation();
+});
 window.matchMedia("(orientation: portrait)").addEventListener('change', applyOrientation);
 window.addEventListener('resize', applyOrientation);
 
@@ -747,6 +899,7 @@ function setMediaState(cameraOK, micOK){
   label.textContent = ready ? 'CAM + MIC OK' :
     cameraOK ? 'CAM OK • MIC OFF' :
     micOK ? 'MIC OK • CAM OFF' : 'MEDIA OFF';
+  document.getElementById('telemetryMedia').textContent = ready ? 'OK' : 'OFF';
 }
 
 async function requestMediaAccess(){
@@ -979,6 +1132,7 @@ if(location.protocol !== 'https:' && location.hostname !== 'localhost' && locati
 
 /* ---------------- Boot ---------------- */
 applyOrientation();
+setEmotion('curious');
 requestAnimationFrame(loop);
 
 /*
