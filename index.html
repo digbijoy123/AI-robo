@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0b0f18">
-<title>ROBO AIOS — v2.7</title>
+<title>ROBO AIOS — v2.8</title>
 <style>
 :root{
   --void:#090d15;
@@ -97,23 +97,13 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
 /* Status / caption */
 .status{position:absolute;left:50%;transform:translateX(-50%);bottom:159px;z-index:26;display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:15px;background:rgba(255,255,255,.42);color:var(--ink);font-size:8px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-.caption{position:absolute;left:15px;right:15px;bottom:84px;min-height:74px;padding:10px 13px;border:1px solid rgba(255,255,255,.58);border-radius:19px;background:rgba(255,255,255,.44);color:var(--ink);z-index:27;box-shadow:0 10px 25px rgba(44,36,64,.09);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.caption{position:absolute;left:15px;right:15px;bottom:84px;min-height:57px;padding:10px 13px;border:1px solid rgba(255,255,255,.58);border-radius:19px;background:rgba(255,255,255,.44);color:var(--ink);z-index:27;box-shadow:0 10px 25px rgba(44,36,64,.09);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
 .caption.show{opacity:1;transform:none}
 .captionTitle{font-size:7px;color:var(--coral);letter-spacing:.12em;margin-bottom:5px}
 .captionText{font-size:10px;line-height:1.4;display:block;padding-right:52px}
 .bars{position:absolute;right:13px;bottom:12px;display:flex;align-items:center;gap:3px}
 .bars i{width:3px;height:8px;border-radius:3px;background:var(--coral);opacity:.35}
 .caption.show .bars i{animation:bar .5s ease-in-out infinite alternate}
-.voiceDiag{margin-top:6px;display:flex;align-items:center;gap:7px;font-size:7px;letter-spacing:.08em;opacity:.78;text-transform:uppercase}
-.voiceDiag .diagDot{width:6px;height:6px;border-radius:50%;background:#a9a9a9;box-shadow:0 0 0 0 transparent;transition:.2s}
-.voiceDiag .diagDot.ready{background:var(--green);box-shadow:0 0 8px rgba(85,197,140,.45)}
-.voiceDiag .diagDot.live{background:var(--coral);box-shadow:0 0 9px rgba(255,118,84,.55);animation:diagPulse .8s ease-in-out infinite}
-.voiceDiag .diagDot.error{background:var(--red)}
-.voiceLevel{display:flex;align-items:flex-end;gap:2px;height:10px;margin-left:auto}
-.voiceLevel i{width:3px;height:4px;border-radius:3px;background:var(--cyan);opacity:.25;transition:height .06s,opacity .06s}
-.voiceLevel.active i{opacity:.9}
-@keyframes diagPulse{0%,100%{opacity:1}50%{opacity:.35}}
-
 .bars i:nth-child(2){animation-delay:.08s}.bars i:nth-child(3){animation-delay:.16s}.bars i:nth-child(4){animation-delay:.24s}.bars i:nth-child(5){animation-delay:.32s}
 @keyframes bar{to{height:18px;opacity:.9}}
 
@@ -173,7 +163,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
       <header class="hud">
         <div class="hudTop">
-          <div class="brand">ROBO <small>v2.7</small></div>
+          <div class="brand">ROBO <small>v2.8</small></div>
           <div class="stateChip" id="stateChip">CURIOUS</div>
           <div class="battery" id="battery">82%</div>
         </div>
@@ -205,8 +195,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
       <div class="caption" id="caption" aria-live="polite">
         <div class="captionTitle">ROBO HEARS</div>
-        <span class="captionText" id="captionText">Tap the microphone to let Robo listen…</span>
-        <div class="voiceDiag"><span class="diagDot" id="voiceDiagDot"></span><span id="voiceDiagText">MIC IDLE · STT READY</span><span class="voiceLevel" id="voiceLevel"><i></i><i></i><i></i><i></i><i></i></span></div>
+        <span class="captionText" id="captionText">Tap the microphone and speak…</span>
         <span class="bars"><i></i><i></i><i></i><i></i><i></i></span>
       </div>
 
@@ -247,9 +236,6 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   const caption = $("#caption");
   const captionText = $("#captionText");
   const micBtn = $("#micBtn");
-  const voiceDiagDot = $("#voiceDiagDot");
-  const voiceDiagText = $("#voiceDiagText");
-  const voiceLevel = $("#voiceLevel");
 
   const STATES = [
     "neutral","happy","curious","sleepy","listening","thinking","talking",
@@ -599,116 +585,81 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   }
   requestAnimationFrame(frame);
 
-  /* ---------- Media + microphone diagnostic ---------- */
-  let micPermissionGranted=false;
-  let audioContext=null, analyser=null, analyserData=null, analyserRAF=null;
-
-  function setVoiceDiag(kind,text){
-    voiceDiagDot.className="diagDot "+(kind||"");
-    voiceDiagText.textContent=text;
-    voiceLevel.classList.toggle("active",kind==="live");
-  }
+  /* ---------- Media + voice diagnostics ---------- */
+  let micAnalyser=null, micAudioContext=null, micMeterRAF=null, micVoiceLevel=0;
+  let micPermissionStream=null;
+  let sttStarting=false;
 
   function stopMicStream(){
-    if(micStream){
-      micStream.getTracks().forEach(track=>{try{track.stop()}catch(_){}});
-      micStream=null;
-    }
-    if(analyserRAF) cancelAnimationFrame(analyserRAF);
-    analyserRAF=null;
-    if(audioContext){
-      try{audioContext.close()}catch(_){}
-      audioContext=null;
-    }
-    analyser=null;
-    analyserData=null;
-    [...voiceLevel.children].forEach((el,i)=>el.style.height=(4+i%2*2)+"px");
+    if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
+    if(micPermissionStream){ micPermissionStream.getTracks().forEach(t=>t.stop()); micPermissionStream=null; }
+    if(micAnalyser){ micAnalyser.disconnect(); micAnalyser=null; }
+    if(micAudioContext){ micAudioContext.close().catch(()=>{}); micAudioContext=null; }
+    if(micMeterRAF){ cancelAnimationFrame(micMeterRAF); micMeterRAF=null; }
+    micVoiceLevel=0;
+  }
+
+  function setVoiceStatus(text){
+    showCaption(text,true);
+    log('VOICE · '+text);
   }
 
   function startMicMeter(stream){
     try{
-      if(!window.AudioContext && !window.webkitAudioContext) return;
-      const AC=window.AudioContext||window.webkitAudioContext;
-      audioContext=new AC();
-      const source=audioContext.createMediaStreamSource(stream);
-      analyser=audioContext.createAnalyser();
-      analyser.fftSize=256;
-      analyser.smoothingTimeConstant=.72;
-      analyserData=new Uint8Array(analyser.fftSize);
-      source.connect(analyser);
+      micAudioContext=new (window.AudioContext||window.webkitAudioContext)();
+      micAnalyser=micAudioContext.createAnalyser();
+      micAnalyser.fftSize=512;
+      const source=micAudioContext.createMediaStreamSource(stream);
+      source.connect(micAnalyser);
+      const data=new Uint8Array(micAnalyser.fftSize);
       const tick=()=>{
-        if(!analyser || !analyserData) return;
-        analyser.getByteTimeDomainData(analyserData);
+        if(!micAnalyser) return;
+        micAnalyser.getByteTimeDomainData(data);
         let sum=0;
-        for(let i=0;i<analyserData.length;i++){const v=(analyserData[i]-128)/128;sum+=v*v}
-        const rms=Math.min(1,Math.sqrt(sum/analyserData.length)*4.2);
-        [...voiceLevel.children].forEach((el,i)=>{
-          const wobble=.55+.45*Math.sin(performance.now()/105+i*1.7);
-          const h=Math.max(3,Math.round(4+rms*22*wobble*(1+i*.08)));
-          el.style.height=h+"px";
-        });
-        analyserRAF=requestAnimationFrame(tick);
+        for(const v of data){ const n=(v-128)/128; sum+=n*n; }
+        micVoiceLevel=Math.min(1,Math.sqrt(sum/data.length)*3.8);
+        if(micVoiceLevel>.045 && !listening) log('MIC · sound detected');
+        micMeterRAF=requestAnimationFrame(tick);
       };
       tick();
-    }catch(err){console.warn("voice meter unavailable",err)}
+    }catch(e){ log('MIC · meter unavailable: '+e.message); }
   }
 
   async function requestMicPermission(){
-    if(!navigator.mediaDevices?.getUserMedia) throw new Error("Microphone API unavailable");
-    const stream=await navigator.mediaDevices.getUserMedia({
-      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
-      video:false
-    });
-    micPermissionGranted=true;
-    // Diagnostic stream is deliberately temporary. SpeechRecognition must own
-    // the microphone when STT starts; leaving this stream open causes Android/
-    // Chrome speech services to report that the microphone cannot be recorded.
+    if(!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone API unavailable');
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},video:false});
+    micPermissionStream=stream;
     startMicMeter(stream);
-    setVoiceDiag("ready","MIC READY · STT READY");
-    micStream=stream;
     return stream;
   }
 
-  function prepareSpeechMic(){
-    // Release every getUserMedia audio track immediately before
-    // SpeechRecognition.start(). Keeping both open is the conflict we are fixing.
-    stopMicStream();
-    setVoiceDiag("live","MIC HANDED TO STT");
-  }
-
   async function startCamera(){
-    if(!navigator.mediaDevices?.getUserMedia) throw new Error("Camera API unavailable");
-    if(cameraStream) cameraStream.getTracks().forEach(t=>t.stop());
-    cameraStream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:"user"},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}},
-      audio:false
-    });
-    $("#camera").srcObject=cameraStream;
-    $("#cameraBox").classList.remove("empty");
-    await $("#camera").play().catch(()=>{});
+    if(!navigator.mediaDevices?.getUserMedia) throw new Error('Camera API unavailable');
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}},audio:false});
+    $('#camera').srcObject=cameraStream;
+    $('#cameraBox').classList.remove('empty');
+    await $('#camera').play().catch(()=>{});
   }
 
   async function enableMedia(){
     try{
       await startCamera();
-      await requestMicPermission();
-      $("#mediaDot").className="dot ok";
-      $("#mediaText").textContent="CAM + MIC OK";
-      showCaption("Camera ready. Microphone permission granted; voice input is ready.",true);
-      hideCaption(3200);
-      log("camera ready + microphone permission granted");
+      if(!micPermissionStream) await requestMicPermission();
+      $('#mediaDot').className='dot ok';
+      $('#mediaText').textContent='CAM + MIC READY';
+      setVoiceStatus('MIC READY · STT READY · tap orange mic');
+      hideCaption(3000);
+      log('MEDIA · camera + microphone permission granted');
     }catch(err){
       console.warn(err);
-      stopMicStream();
-      $("#mediaDot").className="dot";
-      $("#mediaText").textContent="MEDIA BLOCKED";
-      setVoiceDiag("error","MIC ERROR · "+(err.name||"ACCESS"));
-      showCaption("Allow camera + microphone access in Chrome site settings.",true);
-      log("media error: "+err.name+" "+err.message);
+      $('#mediaDot').className='dot';
+      $('#mediaText').textContent='MEDIA BLOCKED';
+      setVoiceStatus('MEDIA ERROR · '+err.message);
+      hideCaption(5000);
     }
   }
-  $("#mediaBtn").addEventListener("click",enableMedia);
-  $("#cameraBox").addEventListener("click",enableMedia);
+  $('#mediaBtn').addEventListener('click',enableMedia);
+  $('#cameraBox').addEventListener('click',enableMedia);
 
   /* ---------- Speech recognition ---------- */
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -717,112 +668,119 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
     recognition.continuous=false;
     recognition.interimResults=true;
     recognition.maxAlternatives=1;
-    recognition.lang="en-US";
-    if("processLocally" in recognition) recognition.processLocally=false;
+    recognition.lang='en-US';
+
+    const sttEvent=(name,detail='')=>log('STT · '+name+(detail?' · '+detail:''));
+    recognition.onaudiostart=()=>{sttEvent('audio start');setVoiceStatus('MIC ACTIVE · STT LISTENING');};
+    recognition.onsoundstart=()=>{sttEvent('sound detected');setVoiceStatus('SOUND DETECTED · STT ACTIVE');};
+    recognition.onspeechstart=()=>{sttEvent('speech detected');setVoiceStatus('VOICE DETECTED · TRANSCRIBING');};
+    recognition.onspeechend=()=>{sttEvent('speech ended');};
+    recognition.onsoundend=()=>{sttEvent('sound ended');};
+    recognition.onaudioend=()=>{sttEvent('audio ended');};
 
     recognition.onstart=()=>{
-      listening=true;micBtn.classList.add("listening");setState("listening","listening · capturing audio");
-      setVoiceDiag("live","MIC ACTIVE · STT LISTENING");
-      showCaption("Listening…",true);
+      listening=true; sttStarting=false;
+      micBtn.classList.add('listening');
+      setState('listening','listening · capturing speech');
+      setVoiceStatus('MIC ACTIVE · STT LISTENING');
     };
-    recognition.onaudiostart=()=>setVoiceDiag("live","AUDIO INPUT · STT ACTIVE");
-    recognition.onsoundstart=()=>setVoiceDiag("live","SOUND DETECTED · STT ACTIVE");
-    recognition.onspeechstart=()=>setVoiceDiag("live","VOICE DETECTED · TRANSCRIBING");
-    recognition.onspeechend=()=>setVoiceDiag("live","VOICE ENDED · FINALIZING");
-    recognition.onsoundend=()=>setVoiceDiag("live","SOUND ENDED · FINALIZING");
-    recognition.onaudioend=()=>setVoiceDiag("live","AUDIO RELEASE · FINALIZING");
 
     recognition.onresult=(e)=>{
-      let interim="";
-      let finalText="";
-      for(let i=0;i<e.results.length;i++){
+      let interim='',finalText='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
         const tx=e.results[i][0].transcript;
-        if(e.results[i].isFinal) finalText+=tx+" "; else interim+=tx+" ";
+        if(e.results[i].isFinal) finalText+=tx+' '; else interim+=tx+' ';
       }
       const text=(finalText||interim).trim();
-      if(text) showCaption(text,true);
+      if(text){
+        sttEvent('transcript',text);
+        showCaption('ROBO HEARS\n'+text,true);
+      }
       if(finalText.trim()){
         const q=finalText.trim();
-        setState("thinking","thinking · processing your words");
+        setState('thinking','thinking · processing your words');
         setTimeout(()=>respond(q),350);
       }
     };
+
     recognition.onerror=(e)=>{
-      listening=false;micBtn.classList.remove("listening");
-      setVoiceDiag("error","STT ERROR · "+(e.error||"unknown"));
-      setState("confused","voice · "+(e.error||"error"));
-      const msg={
-        "not-allowed":"Microphone permission was blocked.",
-        "service-not-allowed":"Speech service is unavailable.",
-        "audio-capture":"Speech service could not access the microphone.",
-        "network":"Speech recognition needs a network connection.",
-        "no-speech":"No speech detected. Try again.",
-        "aborted":"Listening stopped."
-      }[e.error] || ("Voice error: "+e.error);
-      showCaption(msg,true);
-      hideCaption(5000);
+      listening=false; sttStarting=false; micBtn.classList.remove('listening');
+      const code=e&&e.error?e.error:'unknown';
+      sttEvent('ERROR',code);
+      setState('confused','voice · '+code);
+      const messages={
+        'not-allowed':'STT ERROR · microphone permission blocked',
+        'service-not-allowed':'STT ERROR · speech service unavailable',
+        'no-speech':'STT ERROR · no speech detected',
+        'audio-capture':'STT ERROR · microphone unavailable',
+        'network':'STT ERROR · speech service network failure',
+        'aborted':'STT stopped · tap mic to try again'
+      };
+      setVoiceStatus(messages[code]||('STT ERROR · '+code));
+      if(code==='audio-capture'||code==='not-allowed') $('#mediaText').textContent='MIC ERROR';
+      hideCaption(6000);
     };
+
     recognition.onend=()=>{
-      listening=false;micBtn.classList.remove("listening");
-      if(!talking){
-        setVoiceDiag(micPermissionGranted?"ready":"","MIC READY · STT READY");
-        setState("curious","curious · standing by");
-      }
+      listening=false; sttStarting=false; micBtn.classList.remove('listening');
+      sttEvent('ended');
+      if(!talking && state==='listening') setState('curious','curious · standing by');
     };
   }
 
   function respond(text){
-    const l=text.toLowerCase();
-    let reply;
-    if(/\b(hi|hello|hey)\b/.test(l)){setState("happy","happy · greeting");reply="Hey! Good to see you."}
-    else if(/how are you/.test(l)){setState("happy","happy · responding");reply="I'm doing great. All systems are ready."}
-    else if(/love|cute|good boy|good robot/.test(l)){setState("love","love · positive signal");reply="That makes my circuits happy."}
-    else if(/sad|bad|upset/.test(l)){setState("sad","sad · empathy mode");reply="I'm listening. Tell me what happened."}
-    else if(/angry|mad/.test(l)){setState("angry","angry · defensive mode");reply="I hear you. Let's slow down and solve it."}
-    else if(/surprise|wow/.test(l)){setState("surprised","surprised · unexpected input");reply="Whoa. I did not expect that."}
-    else if(/think|thinking|question/.test(l)){setState("thinking","thinking · processing");reply="Give me a moment to think about that."}
-    else if(/forward|back|left|right|stop|move/.test(l)){setState("alert","control request · awaiting robot link");reply="I received the movement command, but the robot link is not online."}
-    else {setState("curious","curious · request received");reply="I heard you. My local brain is still limited, but the voice pipeline is working."}
+    const l=text.toLowerCase(); let reply;
+    if(/\b(hi|hello|hey)\b/.test(l)){setState('happy','happy · greeting');reply='Hey! Good to see you.'}
+    else if(/how are you/.test(l)){setState('happy','happy · responding');reply="I'm doing great. All systems are ready."}
+    else if(/love|cute|good boy|good robot/.test(l)){setState('love','love · positive signal');reply='That makes my circuits happy.'}
+    else if(/sad|bad|upset/.test(l)){setState('sad','sad · empathy mode');reply="I'm listening. Tell me what happened."}
+    else if(/angry|mad/.test(l)){setState('angry','angry · defensive mode');reply="I hear you. Let's slow down and solve it."}
+    else if(/surprise|wow/.test(l)){setState('surprised','surprised · unexpected input');reply='Whoa. I did not expect that.'}
+    else if(/think|thinking|question/.test(l)){setState('thinking','thinking · processing');reply='Give me a moment to think about that.'}
+    else if(/forward|back|left|right|stop|move/.test(l)){setState('alert','control request · awaiting robot link');reply='I received the movement command, but the robot link is not online.'}
+    else {setState('curious','curious · request received');reply='I heard you. My local brain is still limited, but the voice pipeline is working.'}
     speak(reply);
   }
 
   function speak(text){
-    showCaption(text,true);
-    if(!("speechSynthesis" in window)){setState("curious","speech output unavailable");return}
+    showCaption('ROBO SAYS\n'+text,true);
+    if(!('speechSynthesis' in window)){setState('curious','speech output unavailable');return}
     speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.pitch=1.12;u.rate=1.0;
-    u.onstart=()=>{talking=true;micBtn.classList.add("talking");setState("talking","talking · Robo is speaking")}
-    u.onend=()=>{talking=false;micBtn.classList.remove("talking");setState("curious","curious · standing by");hideCaption(1800)}
-    u.onerror=()=>{talking=false;micBtn.classList.remove("talking");setState("curious","speech stopped")}
+    const u=new SpeechSynthesisUtterance(text);u.pitch=1.12;u.rate=1.0;
+    u.onstart=()=>{talking=true;micBtn.classList.add('talking');setState('talking','talking · Robo is speaking')};
+    u.onend=()=>{talking=false;micBtn.classList.remove('talking');setState('curious','curious · standing by');hideCaption(1800)};
+    u.onerror=()=>{talking=false;micBtn.classList.remove('talking');setState('curious','speech stopped')};
     speechSynthesis.speak(u);
   }
 
-  micBtn.addEventListener("click",async()=>{
+  micBtn.addEventListener('click',async()=>{
     lastActivity=performance.now();
-    if(!recognition){
-      setVoiceDiag("error","STT UNSUPPORTED");
-      showCaption("Speech recognition is not supported here. Use Chrome on Android/desktop.",true);
-      hideCaption(5000);return;
-    }
-    if(listening){recognition.stop();return}
+    if(!recognition){setVoiceStatus('STT UNAVAILABLE · Chrome SpeechRecognition not exposed');hideCaption(6000);return;}
+    if(listening){recognition.stop();return;}
+    if(sttStarting) return;
 
     try{
-      if(!micPermissionGranted){
-        await requestMicPermission();
-      }
-      prepareSpeechMic();
-
-      // SpeechRecognition now owns the microphone. We do NOT keep a
-      // getUserMedia audio track open at the same time.
+      /* Critical Android/Chrome hand-off: release getUserMedia audio before STT owns the mic. */
+      sttStarting=true;
+      setVoiceStatus('MIC HANDOFF · releasing audio input for STT…');
+      if(micPermissionStream){micPermissionStream.getTracks().forEach(t=>t.stop());micPermissionStream=null;}
+      if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}
+      if(micMeterRAF){cancelAnimationFrame(micMeterRAF);micMeterRAF=null;}
+      if(micAudioContext){await micAudioContext.close().catch(()=>{});micAudioContext=null;micAnalyser=null;}
+      await new Promise(r=>setTimeout(r,150));
+      setVoiceStatus('STT STARTING · speak now…');
       recognition.start();
-      log("speech recognition start requested after mic hand-off");
     }catch(e){
-      console.warn("speech start failed",e);
-      setVoiceDiag("error","STT START FAILED");
-      showCaption("Could not start speech recognition. Tap again and retry.",true);
-      hideCaption(5000);
+      sttStarting=false;
+      console.warn(e);log('STT start exception · '+e.message);
+      setVoiceStatus('STT START FAILED · '+e.message);
+      hideCaption(6000);
     }
+  });
+
+  /* ---------- Voice diagnostic button behavior ---------- */
+  $('#mediaText').addEventListener('click',()=>{
+    if(micPermissionStream) setVoiceStatus('MIC READY · level meter active · STT waiting');
   });
 
   /* ---------- Orientation test ---------- */
@@ -873,9 +831,9 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   /* ---------- Safe startup ---------- */
   setState("curious","curious · standing by");
   $("#battery").textContent="82%";
-  log("ROBO AIOS v2.7 booted");
+  log("ROBO AIOS v2.8 booted");
   log("3D floating emoji renderer online");
-  log("camera + mic permission ready; speech mic hand-off enabled");
+  log("camera + mic waiting for user permission");
   log("natural idle emotion cycle → ON");
 
   /* Developer convenience: desktop starts in portrait simulator. */
