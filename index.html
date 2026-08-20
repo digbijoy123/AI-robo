@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0b0f18">
-<title>ROBO AIOS — v2.4</title>
+<title>ROBO AIOS — v2.7</title>
 <style>
 :root{
   --void:#090d15;
@@ -97,13 +97,23 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
 /* Status / caption */
 .status{position:absolute;left:50%;transform:translateX(-50%);bottom:159px;z-index:26;display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:15px;background:rgba(255,255,255,.42);color:var(--ink);font-size:8px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-.caption{position:absolute;left:15px;right:15px;bottom:84px;min-height:57px;padding:10px 13px;border:1px solid rgba(255,255,255,.58);border-radius:19px;background:rgba(255,255,255,.44);color:var(--ink);z-index:27;box-shadow:0 10px 25px rgba(44,36,64,.09);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.caption{position:absolute;left:15px;right:15px;bottom:84px;min-height:74px;padding:10px 13px;border:1px solid rgba(255,255,255,.58);border-radius:19px;background:rgba(255,255,255,.44);color:var(--ink);z-index:27;box-shadow:0 10px 25px rgba(44,36,64,.09);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
 .caption.show{opacity:1;transform:none}
 .captionTitle{font-size:7px;color:var(--coral);letter-spacing:.12em;margin-bottom:5px}
 .captionText{font-size:10px;line-height:1.4;display:block;padding-right:52px}
 .bars{position:absolute;right:13px;bottom:12px;display:flex;align-items:center;gap:3px}
 .bars i{width:3px;height:8px;border-radius:3px;background:var(--coral);opacity:.35}
 .caption.show .bars i{animation:bar .5s ease-in-out infinite alternate}
+.voiceDiag{margin-top:6px;display:flex;align-items:center;gap:7px;font-size:7px;letter-spacing:.08em;opacity:.78;text-transform:uppercase}
+.voiceDiag .diagDot{width:6px;height:6px;border-radius:50%;background:#a9a9a9;box-shadow:0 0 0 0 transparent;transition:.2s}
+.voiceDiag .diagDot.ready{background:var(--green);box-shadow:0 0 8px rgba(85,197,140,.45)}
+.voiceDiag .diagDot.live{background:var(--coral);box-shadow:0 0 9px rgba(255,118,84,.55);animation:diagPulse .8s ease-in-out infinite}
+.voiceDiag .diagDot.error{background:var(--red)}
+.voiceLevel{display:flex;align-items:flex-end;gap:2px;height:10px;margin-left:auto}
+.voiceLevel i{width:3px;height:4px;border-radius:3px;background:var(--cyan);opacity:.25;transition:height .06s,opacity .06s}
+.voiceLevel.active i{opacity:.9}
+@keyframes diagPulse{0%,100%{opacity:1}50%{opacity:.35}}
+
 .bars i:nth-child(2){animation-delay:.08s}.bars i:nth-child(3){animation-delay:.16s}.bars i:nth-child(4){animation-delay:.24s}.bars i:nth-child(5){animation-delay:.32s}
 @keyframes bar{to{height:18px;opacity:.9}}
 
@@ -163,7 +173,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
       <header class="hud">
         <div class="hudTop">
-          <div class="brand">ROBO <small>v2.4</small></div>
+          <div class="brand">ROBO <small>v2.7</small></div>
           <div class="stateChip" id="stateChip">CURIOUS</div>
           <div class="battery" id="battery">82%</div>
         </div>
@@ -195,7 +205,8 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
       <div class="caption" id="caption" aria-live="polite">
         <div class="captionTitle">ROBO HEARS</div>
-        <span class="captionText" id="captionText">Tap the microphone and speak…</span>
+        <span class="captionText" id="captionText">Tap the microphone to let Robo listen…</span>
+        <div class="voiceDiag"><span class="diagDot" id="voiceDiagDot"></span><span id="voiceDiagText">MIC IDLE · STT READY</span><span class="voiceLevel" id="voiceLevel"><i></i><i></i><i></i><i></i><i></i></span></div>
         <span class="bars"><i></i><i></i><i></i><i></i><i></i></span>
       </div>
 
@@ -236,6 +247,9 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   const caption = $("#caption");
   const captionText = $("#captionText");
   const micBtn = $("#micBtn");
+  const voiceDiagDot = $("#voiceDiagDot");
+  const voiceDiagText = $("#voiceDiagText");
+  const voiceLevel = $("#voiceLevel");
 
   const STATES = [
     "neutral","happy","curious","sleepy","listening","thinking","talking",
@@ -585,9 +599,86 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   }
   requestAnimationFrame(frame);
 
-  /* ---------- Media ---------- */
+  /* ---------- Media + microphone diagnostic ---------- */
+  let micPermissionGranted=false;
+  let audioContext=null, analyser=null, analyserData=null, analyserRAF=null;
+
+  function setVoiceDiag(kind,text){
+    voiceDiagDot.className="diagDot "+(kind||"");
+    voiceDiagText.textContent=text;
+    voiceLevel.classList.toggle("active",kind==="live");
+  }
+
+  function stopMicStream(){
+    if(micStream){
+      micStream.getTracks().forEach(track=>{try{track.stop()}catch(_){}});
+      micStream=null;
+    }
+    if(analyserRAF) cancelAnimationFrame(analyserRAF);
+    analyserRAF=null;
+    if(audioContext){
+      try{audioContext.close()}catch(_){}
+      audioContext=null;
+    }
+    analyser=null;
+    analyserData=null;
+    [...voiceLevel.children].forEach((el,i)=>el.style.height=(4+i%2*2)+"px");
+  }
+
+  function startMicMeter(stream){
+    try{
+      if(!window.AudioContext && !window.webkitAudioContext) return;
+      const AC=window.AudioContext||window.webkitAudioContext;
+      audioContext=new AC();
+      const source=audioContext.createMediaStreamSource(stream);
+      analyser=audioContext.createAnalyser();
+      analyser.fftSize=256;
+      analyser.smoothingTimeConstant=.72;
+      analyserData=new Uint8Array(analyser.fftSize);
+      source.connect(analyser);
+      const tick=()=>{
+        if(!analyser || !analyserData) return;
+        analyser.getByteTimeDomainData(analyserData);
+        let sum=0;
+        for(let i=0;i<analyserData.length;i++){const v=(analyserData[i]-128)/128;sum+=v*v}
+        const rms=Math.min(1,Math.sqrt(sum/analyserData.length)*4.2);
+        [...voiceLevel.children].forEach((el,i)=>{
+          const wobble=.55+.45*Math.sin(performance.now()/105+i*1.7);
+          const h=Math.max(3,Math.round(4+rms*22*wobble*(1+i*.08)));
+          el.style.height=h+"px";
+        });
+        analyserRAF=requestAnimationFrame(tick);
+      };
+      tick();
+    }catch(err){console.warn("voice meter unavailable",err)}
+  }
+
+  async function requestMicPermission(){
+    if(!navigator.mediaDevices?.getUserMedia) throw new Error("Microphone API unavailable");
+    const stream=await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
+      video:false
+    });
+    micPermissionGranted=true;
+    // Diagnostic stream is deliberately temporary. SpeechRecognition must own
+    // the microphone when STT starts; leaving this stream open causes Android/
+    // Chrome speech services to report that the microphone cannot be recorded.
+    startMicMeter(stream);
+    setVoiceDiag("ready","MIC READY · STT READY");
+    micStream=stream;
+    return stream;
+  }
+
+  function prepareSpeechMic(){
+    // Release every getUserMedia audio track immediately before
+    // SpeechRecognition.start(). Keeping both open is the conflict we are fixing.
+    stopMicStream();
+    setVoiceDiag("live","MIC HANDED TO STT");
+  }
+
   async function startCamera(){
     if(!navigator.mediaDevices?.getUserMedia) throw new Error("Camera API unavailable");
+    if(cameraStream) cameraStream.getTracks().forEach(t=>t.stop());
     cameraStream=await navigator.mediaDevices.getUserMedia({
       video:{facingMode:{ideal:"user"},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}},
       audio:false
@@ -597,29 +688,23 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
     await $("#camera").play().catch(()=>{});
   }
 
-  async function startMic(){
-    if(!navigator.mediaDevices?.getUserMedia) throw new Error("Microphone API unavailable");
-    micStream=await navigator.mediaDevices.getUserMedia({
-      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
-      video:false
-    });
-  }
-
   async function enableMedia(){
     try{
       await startCamera();
-      await startMic();
+      await requestMicPermission();
       $("#mediaDot").className="dot ok";
       $("#mediaText").textContent="CAM + MIC OK";
-      showCaption("Camera and microphone are ready.",true);
-      hideCaption(2600);
-      log("media permissions granted");
+      showCaption("Camera ready. Microphone permission granted; voice input is ready.",true);
+      hideCaption(3200);
+      log("camera ready + microphone permission granted");
     }catch(err){
       console.warn(err);
+      stopMicStream();
       $("#mediaDot").className="dot";
       $("#mediaText").textContent="MEDIA BLOCKED";
+      setVoiceDiag("error","MIC ERROR · "+(err.name||"ACCESS"));
       showCaption("Allow camera + microphone access in Chrome site settings.",true);
-      log("media error: "+err.message);
+      log("media error: "+err.name+" "+err.message);
     }
   }
   $("#mediaBtn").addEventListener("click",enableMedia);
@@ -633,11 +718,20 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
     recognition.interimResults=true;
     recognition.maxAlternatives=1;
     recognition.lang="en-US";
+    if("processLocally" in recognition) recognition.processLocally=false;
 
     recognition.onstart=()=>{
       listening=true;micBtn.classList.add("listening");setState("listening","listening · capturing audio");
+      setVoiceDiag("live","MIC ACTIVE · STT LISTENING");
       showCaption("Listening…",true);
     };
+    recognition.onaudiostart=()=>setVoiceDiag("live","AUDIO INPUT · STT ACTIVE");
+    recognition.onsoundstart=()=>setVoiceDiag("live","SOUND DETECTED · STT ACTIVE");
+    recognition.onspeechstart=()=>setVoiceDiag("live","VOICE DETECTED · TRANSCRIBING");
+    recognition.onspeechend=()=>setVoiceDiag("live","VOICE ENDED · FINALIZING");
+    recognition.onsoundend=()=>setVoiceDiag("live","SOUND ENDED · FINALIZING");
+    recognition.onaudioend=()=>setVoiceDiag("live","AUDIO RELEASE · FINALIZING");
+
     recognition.onresult=(e)=>{
       let interim="";
       let finalText="";
@@ -655,13 +749,25 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
     };
     recognition.onerror=(e)=>{
       listening=false;micBtn.classList.remove("listening");
+      setVoiceDiag("error","STT ERROR · "+(e.error||"unknown"));
       setState("confused","voice · "+(e.error||"error"));
-      showCaption(e.error==="not-allowed"?"Microphone permission was blocked.":("Voice error: "+e.error),true);
-      hideCaption(4500);
+      const msg={
+        "not-allowed":"Microphone permission was blocked.",
+        "service-not-allowed":"Speech service is unavailable.",
+        "audio-capture":"Speech service could not access the microphone.",
+        "network":"Speech recognition needs a network connection.",
+        "no-speech":"No speech detected. Try again.",
+        "aborted":"Listening stopped."
+      }[e.error] || ("Voice error: "+e.error);
+      showCaption(msg,true);
+      hideCaption(5000);
     };
     recognition.onend=()=>{
       listening=false;micBtn.classList.remove("listening");
-      if(!talking) setState("curious","curious · standing by");
+      if(!talking){
+        setVoiceDiag(micPermissionGranted?"ready":"","MIC READY · STT READY");
+        setState("curious","curious · standing by");
+      }
     };
   }
 
@@ -695,16 +801,28 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   micBtn.addEventListener("click",async()=>{
     lastActivity=performance.now();
     if(!recognition){
+      setVoiceDiag("error","STT UNSUPPORTED");
       showCaption("Speech recognition is not supported here. Use Chrome on Android/desktop.",true);
       hideCaption(5000);return;
     }
-    if(!micStream){
-      try{await startMic()}catch(e){
-        showCaption("Microphone permission is required. Tap ENABLE CAM + MIC first.",true);hideCaption(5000);return;
-      }
-    }
     if(listening){recognition.stop();return}
-    try{recognition.start()}catch(e){console.warn(e)}
+
+    try{
+      if(!micPermissionGranted){
+        await requestMicPermission();
+      }
+      prepareSpeechMic();
+
+      // SpeechRecognition now owns the microphone. We do NOT keep a
+      // getUserMedia audio track open at the same time.
+      recognition.start();
+      log("speech recognition start requested after mic hand-off");
+    }catch(e){
+      console.warn("speech start failed",e);
+      setVoiceDiag("error","STT START FAILED");
+      showCaption("Could not start speech recognition. Tap again and retry.",true);
+      hideCaption(5000);
+    }
   });
 
   /* ---------- Orientation test ---------- */
@@ -755,9 +873,9 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   /* ---------- Safe startup ---------- */
   setState("curious","curious · standing by");
   $("#battery").textContent="82%";
-  log("ROBO AIOS v2.4 booted");
+  log("ROBO AIOS v2.7 booted");
   log("3D floating emoji renderer online");
-  log("camera + mic waiting for user permission");
+  log("camera + mic permission ready; speech mic hand-off enabled");
   log("natural idle emotion cycle → ON");
 
   /* Developer convenience: desktop starts in portrait simulator. */
