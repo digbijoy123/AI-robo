@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0b0f18">
-<title>ROBO AIOS — v2.10</title>
+<title>ROBO AIOS — v2.11</title>
 <style>
 :root{
   --void:#090d15;
@@ -181,7 +181,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
       <header class="hud">
         <div class="hudTop">
-          <div class="brand">ROBO <small>v2.10</small></div>
+          <div class="brand">ROBO <small>v2.11</small></div>
           <div class="stateChip" id="stateChip">CURIOUS</div>
           <div class="battery" id="battery">82%</div>
         </div>
@@ -246,7 +246,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
 <div class="devPage" id="devPage" aria-hidden="true">
   <div class="devHeader">
-    <div><div class="devKicker">ROBO AIOS</div><h2>Developer Diagnostics <span>v2.10</span></h2><div class="devSub">Copy the log and send it to me when something fails.</div></div>
+    <div><div class="devKicker">ROBO AIOS</div><h2>Developer Diagnostics <span>v2.11</span></h2><div class="devSub">Copy the log and send it to me when something fails.</div></div>
     <button class="devClose" id="devClose">CLOSE</button>
   </div>
   <div class="devGrid">
@@ -257,6 +257,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
       <div class="devRow"><span>Speech recognition</span><b id="devStt">—</b></div>
       <div class="devRow"><span>Mic permission</span><b id="devMicPermission">—</b></div>
       <div class="devRow"><span>On-device STT</span><b id="devLocalStt">—</b></div>
+      <div class="devRow"><span>AI brain</span><b id="devAI">—</b></div>
       <div class="devRow"><span>Current stage</span><b id="devStage">IDLE</b></div>
       <div class="devLevel"><span>MIC LEVEL</span><div class="devTrack"><i id="devLevel"></i></div></div>
     </section>
@@ -713,7 +714,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   $('#mediaBtn').addEventListener('click',enableMedia);
   $('#cameraBox').addEventListener('click',enableMedia);
 
-  /* ---------- Speech recognition (v2.10 hardened pipeline) ---------- */
+  /* ---------- Speech recognition (v2.11 hardened pipeline) ---------- */
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   let sttSession=0;
   let sttHadResult=false;
@@ -866,28 +867,87 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
     }
   }
 
-  function respond(text){
-    const l=text.toLowerCase(); let reply;
-    if(/\b(hi|hello|hey)\b/.test(l)){setState('happy','happy · greeting');reply='Hey! Good to see you.'}
-    else if(/how are you/.test(l)){setState('happy','happy · responding');reply="I'm doing great. All systems are ready."}
-    else if(/love|cute|good boy|good robot/.test(l)){setState('love','love · positive signal');reply='That makes my circuits happy.'}
-    else if(/sad|bad|upset/.test(l)){setState('sad','sad · empathy mode');reply="I'm listening. Tell me what happened."}
-    else if(/angry|mad/.test(l)){setState('angry','angry · defensive mode');reply="I hear you. Let's slow down and solve it."}
-    else if(/surprise|wow/.test(l)){setState('surprised','surprised · unexpected input');reply='Whoa. I did not expect that.'}
-    else if(/think|thinking|question/.test(l)){setState('thinking','thinking · processing');reply='Give me a moment to think about that.'}
-    else if(/forward|back|left|right|stop|move/.test(l)){setState('alert','control request · awaiting robot link');reply='I received the movement command, but the robot link is not online.'}
-    else {setState('curious','curious · request received');reply='I heard you. My local brain is still limited, but the voice pipeline is working.'}
-    speak(reply);
+  /* ---------- AI brain adapter (v2.11) ----------
+     Browser -> /api/robo -> server-side AI provider.
+     No API key is ever placed in this HTML file. */
+  const conversation=[];
+  const MAX_HISTORY=8;
+
+  function inferEmotion(text){
+    const l=(text||'').toLowerCase();
+    if(/\b(hi|hello|hey|great|awesome|thanks|thank you)\b/.test(l)) return 'happy';
+    if(/\b(love|cute|adorable|friend|miss)\b/.test(l)) return 'love';
+    if(/\b(sad|bad|upset|hurt|lonely|cry)\b/.test(l)) return 'sad';
+    if(/\b(angry|mad|annoyed|frustrated)\b/.test(l)) return 'angry';
+    if(/\b(wow|whoa|really|seriously|surprise)\b/.test(l)) return 'surprised';
+    if(/\b(help|warning|urgent|danger|emergency)\b/.test(l)) return 'alert';
+    if(/\b(thinking|think|question|why|how|what)\b/.test(l)) return 'thinking';
+    return 'curious';
+  }
+
+  async function askRoboAI(text){
+    const clean=(text||'').trim();
+    if(!clean) throw new Error('Empty transcript');
+    conversation.push({role:'user',content:clean});
+    while(conversation.length>MAX_HISTORY) conversation.shift();
+    log('AI · request start');
+    if(devAI) devAI.textContent='REQUESTING';
+    if(devStage) devStage.textContent='AI REQUEST ACTIVE';
+    setVoiceStatus('AI THINKING · processing your words…');
+    const response=await fetch('/api/robo',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:conversation})
+    });
+    let data=null;
+    try{data=await response.json();}catch(_){}
+    if(!response.ok){
+      throw new Error(data&&data.error?data.error:`AI backend returned HTTP ${response.status}`);
+    }
+    if(!data||typeof data.reply!=='string'||!data.reply.trim()) throw new Error('AI returned an empty response');
+    const reply=data.reply.trim();
+    conversation.push({role:'assistant',content:reply});
+    while(conversation.length>MAX_HISTORY) conversation.shift();
+    if(devAI) devAI.textContent='READY';
+    if(devStage) devStage.textContent='AI RESPONSE RECEIVED';
+    log('AI · response received');
+    return reply;
+  }
+
+  function localFallback(text){
+    const l=text.toLowerCase();
+    if(/\b(hi|hello|hey)\b/.test(l)) return 'Hey! I heard you clearly.';
+    if(/how are you/.test(l)) return "I'm doing great. My voice pipeline is online.";
+    if(/what are you|who are you/.test(l)) return "I'm Robo, your little AI companion.";
+    return "I heard you, but my AI brain is not connected yet. Check the Developer Page for the backend status.";
+  }
+
+  async function respond(text){
+    const emotion=inferEmotion(text);
+    setState('thinking','thinking · sending to AI brain');
+    try{
+      const reply=await askRoboAI(text);
+      setState(emotion,emotion+' · AI response');
+      speak(reply);
+    }catch(err){
+      console.error(err);
+      log('AI ERROR · '+(err&&err.message?err.message:String(err)));
+      if(devAI) devAI.textContent='ERROR';
+      if(devStage) devStage.textContent='AI ERROR';
+      setState('confused','AI backend error');
+      speak(localFallback(text));
+    }
   }
 
   function speak(text){
+    log('TTS · response queued');
     showCaption('ROBO SAYS\n'+text,true);
     if(!('speechSynthesis' in window)){setState('curious','speech output unavailable');return}
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(text);u.pitch=1.12;u.rate=1.0;
-    u.onstart=()=>{talking=true;micBtn.classList.add('talking');setState('talking','talking · Robo is speaking')};
-    u.onend=()=>{talking=false;micBtn.classList.remove('talking');setState('curious','curious · standing by');hideCaption(1800)};
-    u.onerror=()=>{talking=false;micBtn.classList.remove('talking');setState('curious','speech stopped')};
+    u.onstart=()=>{log('TTS · speech start');talking=true;micBtn.classList.add('talking');setState('talking','talking · Robo is speaking')};
+    u.onend=()=>{log('TTS · speech end');talking=false;micBtn.classList.remove('talking');setState('curious','curious · standing by');hideCaption(1800)};
+    u.onerror=(e)=>{log('TTS ERROR · '+(e&&e.error?e.error:'unknown'));talking=false;micBtn.classList.remove('talking');setState('curious','speech stopped')};
     speechSynthesis.speak(u);
   }
 
@@ -905,7 +965,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
 /* ---------- Developer diagnostics runtime ---------- */
 const devPage=$("#devPage"), devLogs=$("#devLogs"), devTranscript=$("#devTranscript");
-const devStage=$("#devStage"), devMic=$("#devMic"), devMicPermission=$("#devMicPermission"), devLocalStt=$("#devLocalStt"), devStt=$("#devStt"), devBrowser=$("#devBrowser");
+const devStage=$("#devStage"), devMic=$("#devMic"), devMicPermission=$("#devMicPermission"), devLocalStt=$("#devLocalStt"), devStt=$("#devStt"), devBrowser=$("#devBrowser"), devAI=$("#devAI");
 let devLogLines=["[BOOT] Developer diagnostics ready."];
 
 function devLog(type,msg,data){
@@ -918,6 +978,7 @@ function devLog(type,msg,data){
 }
 function devStageSet(s){if(devStage)devStage.textContent=s;devLog("STAGE",s)}
 if(devBrowser)devBrowser.textContent=navigator.userAgent.includes("Chrome")?"Chrome":"Other";
+if(devAI)devAI.textContent="READY · /api/robo";
 if(devStt)devStt.textContent=(window.SpeechRecognition||window.webkitSpeechRecognition)?"SUPPORTED":"UNSUPPORTED";
 if(devMic)devMic.textContent=navigator.mediaDevices?.getUserMedia?"API READY":"UNAVAILABLE";
 if(devMicPermission)devMicPermission.textContent="UNKNOWN · tap ENABLE CAM + MIC";
@@ -943,7 +1004,8 @@ function runDevChecks(){
     ["Camera",!!$("#camera")],
     ["3D emoji canvas",!!$("#face")],
     ["Media permission API",!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)],
-    ["On-device STT API",!!(window.SpeechRecognition&&"processLocally" in SpeechRecognition.prototype)]
+    ["On-device STT API",!!(window.SpeechRecognition&&"processLocally" in SpeechRecognition.prototype)],
+    ["AI adapter",!!window.fetch]
   ];
   $("#devChecks").innerHTML=list.map(x=>`<div class="devCheck ${x[1]?"ok":"fail"}"><span>${x[0]}</span><b>${x[1]?"PASS":"FAIL"}</b></div>`).join("");
   list.forEach(x=>devLog("CHECK",x[0]+": "+(x[1]?"PASS":"FAIL")));
@@ -967,7 +1029,7 @@ $("#clearLogs").addEventListener("click",()=>{
 });
 $("#copyLogs").addEventListener("click",async()=>{
   const payload=[
-    "ROBO AIOS v2.10 DIAGNOSTICS",
+    "ROBO AIOS v2.11 DIAGNOSTICS",
     "Time: "+new Date().toISOString(),
     "URL: "+location.href,
     "User Agent: "+navigator.userAgent,
@@ -976,6 +1038,7 @@ $("#copyLogs").addEventListener("click",async()=>{
     "Mic permission: "+devMicPermission.textContent,
     "STT: "+devStt.textContent,
     "On-device STT: "+devLocalStt.textContent,
+    "AI brain: "+devAI.textContent,
     "",
     "TRANSCRIPT:",
     devTranscript.textContent,
@@ -1077,7 +1140,7 @@ function hookRecognitionDiagnostics(r){
   /* ---------- Safe startup ---------- */
   setState("curious","curious · standing by");
   $("#battery").textContent="82%";
-  log("ROBO AIOS v2.10 booted");
+  log("ROBO AIOS v2.11 booted");
   log("3D floating emoji renderer online");
   log("camera + mic waiting for user permission");
   log("natural idle emotion cycle → ON");
