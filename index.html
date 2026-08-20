@@ -152,6 +152,24 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   .device{width:min(88vw,560px);height:min(92vh,920px)}
   .device.landscape{width:min(94vw,1100px);height:min(86vh,650px)}
 }
+
+/* ---------- Developer diagnostics page ---------- */
+.devPage{position:fixed;inset:0;z-index:999;background:#10131d;color:#f5f7ff;padding:18px;overflow:auto;font-family:'JetBrains Mono',monospace;opacity:0;pointer-events:none;transform:translateY(10px);transition:.2s ease}
+.devPage.open{opacity:1;pointer-events:auto;transform:none}
+.devHeader{max-width:1100px;margin:0 auto 16px;display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.devHeader h2{margin:4px 0;font:600 21px 'Fredoka',sans-serif}.devHeader h2 span{font:600 9px 'JetBrains Mono';color:#69d8cf}
+.devSub{font-size:9px;color:#8f98aa}.devKicker{font-size:8px;letter-spacing:.16em;color:#ff9a78}
+.devClose,.devAction{border:1px solid rgba(255,255,255,.12);background:#1b2030;color:#fff;border-radius:10px;padding:9px 12px;font:600 8px 'JetBrains Mono';cursor:pointer}
+.devGrid{max-width:1100px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.devCard{background:#171b27;border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:14px;min-width:0}
+.devTitle{font-size:8px;letter-spacing:.15em;color:#69d8cf;margin-bottom:11px}
+.devRow{display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding:7px 0;font-size:8px}
+.devRow b{font-weight:500;color:#9fe8b0}.devLogCard{grid-column:1/-1}
+.devActions{display:flex;gap:8px;margin-bottom:9px}.devPre{margin:0;white-space:pre-wrap;word-break:break-word;font:8px/1.55 'JetBrains Mono';color:#d7dbea;max-height:280px;overflow:auto}
+.devLevel{display:flex;gap:9px;align-items:center;margin-top:11px;font-size:7px;color:#8f98aa}.devTrack{height:7px;flex:1;background:#0d1017;border-radius:8px;overflow:hidden}.devTrack i{display:block;width:0;height:100%;background:#69d8cf;border-radius:8px}
+.devChecks{display:grid;gap:6px}.devCheck{display:flex;justify-content:space-between;background:#10131d;padding:7px 8px;border-radius:7px;font-size:8px}.devCheck.ok b{color:#7ee59a}.devCheck.fail b{color:#ff7777}
+@media(max-width:700px){.devGrid{grid-template-columns:1fr}.devLogCard{grid-column:auto}.devHeader h2{font-size:17px}}
+
 </style>
 </head>
 <body>
@@ -207,7 +225,7 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
 
       <footer class="bottom">
         <div class="actions">
-          <button class="modeBtn" id="orientationBtn">LANDSCAPE TEST</button>
+          <button class="modeBtn" id="orientationBtn">LANDSCAPE TEST</button><button class="modeBtn" id="devPageBtn">DEV PAGE</button>
           <button class="mediaBtn" id="mediaBtn">ENABLE CAM + MIC</button>
           <button class="modeBtn" id="devBtn">DEV STATES</button>
         </div>
@@ -223,6 +241,37 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
       <button class="devBtn" id="bleBtn" style="position:absolute;right:15px;top:64px;z-index:35;cursor:pointer">CONNECT ROBOT</button>
     </section>
   </main>
+</div>
+
+
+<div class="devPage" id="devPage" aria-hidden="true">
+  <div class="devHeader">
+    <div><div class="devKicker">ROBO AIOS</div><h2>Developer Diagnostics <span>v2.9</span></h2><div class="devSub">Copy the log and send it to me when something fails.</div></div>
+    <button class="devClose" id="devClose">CLOSE</button>
+  </div>
+  <div class="devGrid">
+    <section class="devCard">
+      <div class="devTitle">VOICE PIPELINE</div>
+      <div class="devRow"><span>Browser</span><b id="devBrowser">—</b></div>
+      <div class="devRow"><span>Microphone</span><b id="devMic">—</b></div>
+      <div class="devRow"><span>Speech recognition</span><b id="devStt">—</b></div>
+      <div class="devRow"><span>Current stage</span><b id="devStage">IDLE</b></div>
+      <div class="devLevel"><span>MIC LEVEL</span><div class="devTrack"><i id="devLevel"></i></div></div>
+    </section>
+    <section class="devCard">
+      <div class="devTitle">CAPTURED TRANSCRIPT</div>
+      <pre class="devPre" id="devTranscript">No transcript yet.</pre>
+    </section>
+    <section class="devCard devLogCard">
+      <div class="devTitle">EVENT / ERROR LOG</div>
+      <div class="devActions"><button class="devAction" id="copyLogs">COPY LOGS</button><button class="devAction" id="clearLogs">CLEAR</button></div>
+      <pre class="devPre" id="devLogs">[BOOT] Developer diagnostics ready.</pre>
+    </section>
+    <section class="devCard">
+      <div class="devTitle">SYSTEM CHECK</div>
+      <div class="devChecks" id="devChecks"></div>
+    </section>
+  </div>
 </div>
 
 <script>
@@ -782,6 +831,111 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 45px rgba(255,255,255,
   $('#mediaText').addEventListener('click',()=>{
     if(micPermissionStream) setVoiceStatus('MIC READY · level meter active · STT waiting');
   });
+
+
+/* ---------- Developer diagnostics runtime ---------- */
+const devPage=$("#devPage"), devLogs=$("#devLogs"), devTranscript=$("#devTranscript");
+const devStage=$("#devStage"), devMic=$("#devMic"), devStt=$("#devStt"), devBrowser=$("#devBrowser");
+let devLogLines=["[BOOT] Developer diagnostics ready."];
+
+function devLog(type,msg,data){
+  let extra="";
+  if(data!==undefined){try{extra=" "+JSON.stringify(data)}catch(_){extra=" "+String(data)}}
+  const line=`[${new Date().toLocaleTimeString()}] [${type}] ${msg}${extra}`;
+  devLogLines.push(line);
+  if(devLogLines.length>500)devLogLines.shift();
+  if(devLogs){devLogs.textContent=devLogLines.join("\n");devLogs.scrollTop=devLogs.scrollHeight}
+}
+function devStageSet(s){if(devStage)devStage.textContent=s;devLog("STAGE",s)}
+if(devBrowser)devBrowser.textContent=navigator.userAgent.includes("Chrome")?"Chrome":"Other";
+if(devStt)devStt.textContent=(window.SpeechRecognition||window.webkitSpeechRecognition)?"SUPPORTED":"UNSUPPORTED";
+
+function runDevChecks(){
+  const list=[
+    ["HTTPS / localhost",location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1"],
+    ["getUserMedia",!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)],
+    ["SpeechRecognition",!!(window.SpeechRecognition||window.webkitSpeechRecognition)],
+    ["Speech synthesis","speechSynthesis" in window],
+    ["Camera",!!$("#camera")],
+    ["3D emoji canvas",!!$("#face")]
+  ];
+  $("#devChecks").innerHTML=list.map(x=>`<div class="devCheck ${x[1]?"ok":"fail"}"><span>${x[0]}</span><b>${x[1]?"PASS":"FAIL"}</b></div>`).join("");
+  list.forEach(x=>devLog("CHECK",x[0]+": "+(x[1]?"PASS":"FAIL")));
+}
+runDevChecks();
+
+$("#devPageBtn").addEventListener("click",()=>{
+  devPage.classList.add("open");
+  devPage.setAttribute("aria-hidden","false");
+  runDevChecks();
+  devLog("UI","Developer Page opened");
+});
+$("#devClose").addEventListener("click",()=>{
+  devPage.classList.remove("open");
+  devPage.setAttribute("aria-hidden","true");
+});
+$("#clearLogs").addEventListener("click",()=>{
+  devLogLines=["[CLEARED] Log cleared by user."];
+  devLogs.textContent=devLogLines[0];
+});
+$("#copyLogs").addEventListener("click",async()=>{
+  const payload=[
+    "ROBO AIOS v2.9 DIAGNOSTICS",
+    "Time: "+new Date().toISOString(),
+    "URL: "+location.href,
+    "User Agent: "+navigator.userAgent,
+    "Stage: "+devStage.textContent,
+    "Mic: "+devMic.textContent,
+    "STT: "+devStt.textContent,
+    "",
+    "TRANSCRIPT:",
+    devTranscript.textContent,
+    "",
+    "LOG:",
+    devLogLines.join("\n")
+  ].join("\n");
+  try{
+    await navigator.clipboard.writeText(payload);
+    devLog("UI","Diagnostics copied to clipboard");
+  }catch(e){
+    devLog("ERROR","Clipboard copy failed",{name:e?.name,message:e?.message});
+  }
+});
+
+window.addEventListener("error",e=>{
+  devLog("ERROR","Runtime error",{message:e.message,file:e.filename,line:e.lineno,col:e.colno});
+});
+window.addEventListener("unhandledrejection",e=>{
+  const r=e.reason||{};
+  devLog("ERROR","Unhandled promise rejection",{name:r.name,message:r.message});
+});
+
+["log","warn","error"].forEach(level=>{
+  const original=console[level].bind(console);
+  console[level]=(...args)=>{
+    original(...args);
+    devLog(level.toUpperCase(),args.map(x=>{
+      try{return typeof x==="string"?x:JSON.stringify(x)}
+      catch(_){return String(x)}
+    }).join(" "));
+  };
+});
+
+function hookRecognitionDiagnostics(){
+  if(!recognition)return;
+  ["onaudiostart","onaudioend","onsoundstart","onsoundend","onspeechstart","onspeechend"].forEach(name=>{
+    const old=recognition[name];
+    recognition[name]=function(e){
+      devLog("STT",name.replace(/^on/,"").toUpperCase());
+      if(name==="onaudiostart")devStageSet("AUDIO INPUT ACTIVE");
+      if(name==="onsoundstart")devStageSet("SOUND DETECTED");
+      if(name==="onspeechstart")devStageSet("VOICE DETECTED");
+      if(name==="onspeechend")devStageSet("VOICE ENDED");
+      if(typeof old==="function")old.call(this,e);
+    };
+  });
+}
+setTimeout(hookRecognitionDiagnostics,0);
 
   /* ---------- Orientation test ---------- */
   function setOrientation(land){
